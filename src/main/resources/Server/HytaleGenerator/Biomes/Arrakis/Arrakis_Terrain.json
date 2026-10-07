@@ -1,21 +1,25 @@
 {
   "Name": "Arrakis_Terrain",
-
   "Terrain": {
     "Type": "DAOTerrain",
     "Density": {
       "Type": "Max",
       "Skip": false,
       "Inputs": [
-
         {
           "Type": "CurveMapper",
           "Skip": false,
           "Curve": {
             "Type": "Manual",
             "Points": [
-              { "In": -5, "Out":  2.0 },
-              { "In":  5, "Out": -2.0 }
+              {
+                "In": -5,
+                "Out": 2
+              },
+              {
+                "In": 5,
+                "Out": -2
+              }
             ]
           },
           "Inputs": [
@@ -27,14 +31,13 @@
             }
           ]
         },
-
         {
           "Type": "Sum",
           "Skip": false,
           "Inputs": [
             {
               "Type": "Clamp",
-              "WallA": -1.0,
+              "WallA": -1,
               "WallB": 0.8,
               "Skip": false,
               "Inputs": [
@@ -42,7 +45,7 @@
                   "Type": "SimplexNoise2D",
                   "Scale": 400,
                   "Octaves": 4,
-                  "Lacunarity": 2.0,
+                  "Lacunarity": 2,
                   "Persistence": 0.5,
                   "Seed": "A",
                   "Skip": false
@@ -55,8 +58,14 @@
               "Curve": {
                 "Type": "Manual",
                 "Points": [
-                  { "In":  0, "Out":  0.2 },
-                  { "In": 80, "Out": -1.8 }
+                  {
+                    "In": 0,
+                    "Out": 0.2
+                  },
+                  {
+                    "In": 80,
+                    "Out": -1.8
+                  }
                 ]
               },
               "Inputs": [
@@ -69,12 +78,2159 @@
               ]
             }
           ]
+        },
+        {
+          "$Comment": "Rock. Solid where A + B > 0, i.e. up to 120 m * A above Base.",
+          "Type": "Exported",
+          "ExportAs": "Arrakis_Rock",
+          "SingleInstance": true,
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "Sum",
+              "Skip": false,
+              "Inputs": [
+                {
+                  "$Comment": "A: rock top height above Base in units of 120 m, per column. Negative = no rock.",
+                  "Type": "YOverride",
+                  "Value": 0,
+                  "Skip": false,
+                  "Inputs": [
+                    {
+                      "Type": "Cache",
+                      "Capacity": 3,
+                      "Skip": false,
+                      "Inputs": [
+                        {
+                          "Type": "Min",
+                          "Skip": false,
+                          "Inputs": [
+                            {
+                              "$Comment": "No rock within about 70 m of the fixed spawn at the origin.",
+                              "Type": "Distance",
+                              "Skip": false,
+                              "Curve": {
+                                "Type": "Manual",
+                                "Points": [
+                                  {
+                                    "In": 0,
+                                    "Out": -3
+                                  },
+                                  {
+                                    "In": 70,
+                                    "Out": -3
+                                  },
+                                  {
+                                    "In": 90,
+                                    "Out": 5
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "Type": "Sum",
+                              "Skip": false,
+                              "Inputs": [
+                                {
+                                  "$Comment": "Terraces: stair-step curve, shelves 0, 3, 8, 14, 20, 29, 35, 44, 50, 58, 67, 73, 82, 90, 98, 106, 112, 120 m. Negative = no rock.",
+                                  "Type": "CurveMapper",
+                                  "Curve": {
+                                    "Type": "Manual",
+                                    "Points": [
+                                      {
+                                        "In": -1,
+                                        "Out": -1
+                                      },
+                                      {
+                                        "In": 0,
+                                        "Out": 0
+                                      },
+                                      {
+                                        "In": 0.025,
+                                        "Out": 0.025
+                                      },
+                                      {
+                                        "In": 0.06042,
+                                        "Out": 0.03
+                                      },
+                                      {
+                                        "In": 0.06667,
+                                        "Out": 0.06667
+                                      },
+                                      {
+                                        "In": 0.10917,
+                                        "Out": 0.07267
+                                      },
+                                      {
+                                        "In": 0.11667,
+                                        "Out": 0.11667
+                                      },
+                                      {
+                                        "In": 0.15917,
+                                        "Out": 0.12267
+                                      },
+                                      {
+                                        "In": 0.16667,
+                                        "Out": 0.16667
+                                      },
+                                      {
+                                        "In": 0.23042,
+                                        "Out": 0.17567
+                                      },
+                                      {
+                                        "In": 0.24167,
+                                        "Out": 0.24167
+                                      },
+                                      {
+                                        "In": 0.28417,
+                                        "Out": 0.24767
+                                      },
+                                      {
+                                        "In": 0.29167,
+                                        "Out": 0.29167
+                                      },
+                                      {
+                                        "In": 0.36667,
+                                        "Out": 0.36667
+                                      },
+                                      {
+                                        "In": 0.40917,
+                                        "Out": 0.37267
+                                      },
+                                      {
+                                        "In": 0.41667,
+                                        "Out": 0.41667
+                                      },
+                                      {
+                                        "In": 0.47333,
+                                        "Out": 0.42467
+                                      },
+                                      {
+                                        "In": 0.48333,
+                                        "Out": 0.48333
+                                      },
+                                      {
+                                        "In": 0.54708,
+                                        "Out": 0.49233
+                                      },
+                                      {
+                                        "In": 0.55833,
+                                        "Out": 0.55833
+                                      },
+                                      {
+                                        "In": 0.60083,
+                                        "Out": 0.56433
+                                      },
+                                      {
+                                        "In": 0.60833,
+                                        "Out": 0.60833
+                                      },
+                                      {
+                                        "In": 0.68333,
+                                        "Out": 0.68333
+                                      },
+                                      {
+                                        "In": 0.74,
+                                        "Out": 0.69133
+                                      },
+                                      {
+                                        "In": 0.75,
+                                        "Out": 0.75
+                                      },
+                                      {
+                                        "In": 0.80667,
+                                        "Out": 0.758
+                                      },
+                                      {
+                                        "In": 0.81667,
+                                        "Out": 0.81667
+                                      },
+                                      {
+                                        "In": 0.87333,
+                                        "Out": 0.82467
+                                      },
+                                      {
+                                        "In": 0.88333,
+                                        "Out": 0.88333
+                                      },
+                                      {
+                                        "In": 0.92583,
+                                        "Out": 0.88933
+                                      },
+                                      {
+                                        "In": 0.93333,
+                                        "Out": 0.93333
+                                      },
+                                      {
+                                        "In": 0.99,
+                                        "Out": 0.94133
+                                      },
+                                      {
+                                        "In": 1,
+                                        "Out": 1
+                                      }
+                                    ]
+                                  },
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Sum",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "$Comment": "Rock height above the sand before terracing.",
+                                          "Type": "Max",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "$Comment": "Large island height before terracing.",
+                                              "Type": "Min",
+                                              "Skip": false,
+                                              "Inputs": [
+                                                {
+                                                  "$Comment": "Height available from the shore inwards: F * 110 m.",
+                                                  "Type": "Multiplier",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Constant",
+                                                      "Value": 0.91667,
+                                                      "Skip": false
+                                                    },
+                                                    {
+                                                      "$Comment": "Island field F: > 0 is rock.",
+                                                      "Type": "Sum",
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "$Comment": "Radial falloff from the nearest large-island centre: 1 at the centre, 0 at 300 m, -1 at 600 m.",
+                                                          "Type": "PositionsCellNoise",
+                                                          "Skip": false,
+                                                          "MaxDistance": 600,
+                                                          "Positions": {
+                                                            "$Comment": "Offset keeps island centres away from the fixed spawn at the origin.",
+                                                            "Type": "Offset",
+                                                            "Skip": false,
+                                                            "OffsetX": 900,
+                                                            "OffsetY": 0,
+                                                            "OffsetZ": 900,
+                                                            "Positions": {
+                                                              "$Comment": "Randomly drop 30% of the positions.",
+                                                              "Type": "Occurrence",
+                                                              "Skip": false,
+                                                              "Seed": "Arrakis_Islands_Drop",
+                                                              "FieldFunction": {
+                                                                "Type": "Constant",
+                                                                "Value": 0.7,
+                                                                "Skip": false
+                                                              },
+                                                              "Positions": {
+                                                                "Type": "Mesh2D",
+                                                                "Skip": false,
+                                                                "PointsY": 0,
+                                                                "PointGenerator": {
+                                                                  "Type": "Mesh",
+                                                                  "Jitter": 0.2,
+                                                                  "ScaleX": 2500,
+                                                                  "ScaleY": 2500,
+                                                                  "ScaleZ": 2500,
+                                                                  "Seed": "Arrakis_Islands"
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "ReturnType": {
+                                                            "Type": "Curve",
+                                                            "Curve": {
+                                                              "Type": "Manual",
+                                                              "Points": [
+                                                                {
+                                                                  "In": 0,
+                                                                  "Out": 1
+                                                                },
+                                                                {
+                                                                  "In": 300,
+                                                                  "Out": 0
+                                                                },
+                                                                {
+                                                                  "In": 600,
+                                                                  "Out": -1
+                                                                }
+                                                              ]
+                                                            }
+                                                          },
+                                                          "DistanceFunction": {
+                                                            "Type": "Euclidean"
+                                                          }
+                                                        },
+                                                        {
+                                                          "$Comment": "Lobes: breaks the mass into bays, peninsulas and detached pieces.",
+                                                          "Type": "Normalizer",
+                                                          "FromMin": -1,
+                                                          "FromMax": 1,
+                                                          "ToMin": -0.62,
+                                                          "ToMax": 0.62,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Scale": 230,
+                                                              "Octaves": 2,
+                                                              "Lacunarity": 2,
+                                                              "Persistence": 0.5,
+                                                              "Seed": "Arrakis_Islands_Lobes",
+                                                              "Skip": false
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "$Comment": "Fine coastline detail.",
+                                                          "Type": "Normalizer",
+                                                          "FromMin": -1,
+                                                          "FromMax": 1,
+                                                          "ToMin": -0.05,
+                                                          "ToMax": 0.05,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Scale": 60,
+                                                              "Octaves": 2,
+                                                              "Lacunarity": 2,
+                                                              "Persistence": 0.5,
+                                                              "Seed": "Arrakis_Islands_Coast",
+                                                              "Skip": false
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "$Comment": "Height cap: low benches where the noise is low, summits where it is high.",
+                                                  "Type": "CurveMapper",
+                                                  "Curve": {
+                                                    "Type": "Manual",
+                                                    "Points": [
+                                                      {
+                                                        "In": -1,
+                                                        "Out": 0.08333
+                                                      },
+                                                      {
+                                                        "In": -0.35,
+                                                        "Out": 0.11667
+                                                      },
+                                                      {
+                                                        "In": -0.1,
+                                                        "Out": 0.25
+                                                      },
+                                                      {
+                                                        "In": 0.15,
+                                                        "Out": 0.45
+                                                      },
+                                                      {
+                                                        "In": 0.45,
+                                                        "Out": 0.75
+                                                      },
+                                                      {
+                                                        "In": 0.7,
+                                                        "Out": 0.91667
+                                                      },
+                                                      {
+                                                        "In": 1,
+                                                        "Out": 0.91667
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "SimplexNoise2D",
+                                                      "Scale": 210,
+                                                      "Octaves": 3,
+                                                      "Lacunarity": 2,
+                                                      "Persistence": 0.5,
+                                                      "Seed": "Arrakis_Islands_Tops",
+                                                      "Skip": false
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "$Comment": "Medium outcrops. Each cell picks a wedge (or nothing): white noise at the cell position plus a shift that grows with distance from the nearest large island, so the biggest wedges drop out first and all are gone by 820 m from the island centre.",
+                                              "Type": "PositionsCellNoise",
+                                              "Skip": false,
+                                              "MaxDistance": 180,
+                                              "Positions": {
+                                                "Type": "Mesh2D",
+                                                "Skip": false,
+                                                "PointsY": 0,
+                                                "PointGenerator": {
+                                                  "Type": "Mesh",
+                                                  "Jitter": 0.35,
+                                                  "ScaleX": 320,
+                                                  "ScaleY": 320,
+                                                  "ScaleZ": 320,
+                                                  "Seed": "Arrakis_Outcrops_Medium"
+                                                }
+                                              },
+                                              "ReturnType": {
+                                                "Type": "Density",
+                                                "ChoiceDensity": {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "WhiteNoise",
+                                                      "Seed": "Arrakis_Outcrops_Choice_Medium",
+                                                      "Skip": false
+                                                    },
+                                                    {
+                                                      "Type": "PositionsCellNoise",
+                                                      "Skip": false,
+                                                      "MaxDistance": 920,
+                                                      "Positions": {
+                                                        "$Comment": "Offset keeps island centres away from the fixed spawn at the origin.",
+                                                        "Type": "Offset",
+                                                        "Skip": false,
+                                                        "OffsetX": 900,
+                                                        "OffsetY": 0,
+                                                        "OffsetZ": 900,
+                                                        "Positions": {
+                                                          "$Comment": "Randomly drop 30% of the positions.",
+                                                          "Type": "Occurrence",
+                                                          "Skip": false,
+                                                          "Seed": "Arrakis_Islands_Drop",
+                                                          "FieldFunction": {
+                                                            "Type": "Constant",
+                                                            "Value": 0.7,
+                                                            "Skip": false
+                                                          },
+                                                          "Positions": {
+                                                            "Type": "Mesh2D",
+                                                            "Skip": false,
+                                                            "PointsY": 0,
+                                                            "PointGenerator": {
+                                                              "Type": "Mesh",
+                                                              "Jitter": 0.2,
+                                                              "ScaleX": 2500,
+                                                              "ScaleY": 2500,
+                                                              "ScaleZ": 2500,
+                                                              "Seed": "Arrakis_Islands"
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "ReturnType": {
+                                                        "Type": "Curve",
+                                                        "Curve": {
+                                                          "Type": "Manual",
+                                                          "Points": [
+                                                            {
+                                                              "In": 380,
+                                                              "Out": 0
+                                                            },
+                                                            {
+                                                              "In": 820,
+                                                              "Out": 1.04
+                                                            },
+                                                            {
+                                                              "In": 870,
+                                                              "Out": 3
+                                                            }
+                                                          ]
+                                                        }
+                                                      },
+                                                      "DistanceFunction": {
+                                                        "Type": "Euclidean"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "Delimiters": [
+                                                  {
+                                                    "From": -1,
+                                                    "To": -0.76,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 250 x 140 m, lean 20 deg, crest 45 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 20,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 1.125,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 125,
+                                                                            "Y": 1,
+                                                                            "Z": 70
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 56.25,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -137.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 68.75,
+                                                                        "Out": 0.375
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.76,
+                                                    "To": -0.52,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 220 x 110 m, lean 50 deg, crest 30 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 50,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.75,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 110,
+                                                                            "Y": 1,
+                                                                            "Z": 55
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 49.5,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -121,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 60.5,
+                                                                        "Out": 0.25
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.52,
+                                                    "To": -0.32,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 200 x 160 m, lean 30 deg, crest 60 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 30,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 1.5,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 100,
+                                                                            "Y": 1,
+                                                                            "Z": 80
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 45,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -110,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 55,
+                                                                        "Out": 0.5
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.32,
+                                                    "To": -0.12,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 180 x 90 m, lean 5 deg, crest 22 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 5,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.55,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 90,
+                                                                            "Y": 1,
+                                                                            "Z": 45
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 40.5,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -99,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 49.5,
+                                                                        "Out": 0.18333
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.12,
+                                                    "To": 0.04,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 150 x 100 m, lean 40 deg, crest 14 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 40,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.35,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 75,
+                                                                            "Y": 1,
+                                                                            "Z": 50
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 33.75,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -82.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 41.25,
+                                                                        "Out": 0.11667
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                ],
+                                                "DefaultValue": -1
+                                              },
+                                              "DistanceFunction": {
+                                                "Type": "Euclidean"
+                                              }
+                                            },
+                                            {
+                                              "$Comment": "Small outcrops. Each cell picks a wedge (or nothing): white noise at the cell position plus a shift that grows with distance from the nearest large island, so the biggest wedges drop out first and all are gone by 900 m from the island centre.",
+                                              "Type": "PositionsCellNoise",
+                                              "Skip": false,
+                                              "MaxDistance": 80,
+                                              "Positions": {
+                                                "Type": "Mesh2D",
+                                                "Skip": false,
+                                                "PointsY": 0,
+                                                "PointGenerator": {
+                                                  "Type": "Mesh",
+                                                  "Jitter": 0.4,
+                                                  "ScaleX": 130,
+                                                  "ScaleY": 130,
+                                                  "ScaleZ": 130,
+                                                  "Seed": "Arrakis_Outcrops_Small"
+                                                }
+                                              },
+                                              "ReturnType": {
+                                                "Type": "Density",
+                                                "ChoiceDensity": {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "WhiteNoise",
+                                                      "Seed": "Arrakis_Outcrops_Choice_Small",
+                                                      "Skip": false
+                                                    },
+                                                    {
+                                                      "Type": "PositionsCellNoise",
+                                                      "Skip": false,
+                                                      "MaxDistance": 1000,
+                                                      "Positions": {
+                                                        "$Comment": "Offset keeps island centres away from the fixed spawn at the origin.",
+                                                        "Type": "Offset",
+                                                        "Skip": false,
+                                                        "OffsetX": 900,
+                                                        "OffsetY": 0,
+                                                        "OffsetZ": 900,
+                                                        "Positions": {
+                                                          "$Comment": "Randomly drop 30% of the positions.",
+                                                          "Type": "Occurrence",
+                                                          "Skip": false,
+                                                          "Seed": "Arrakis_Islands_Drop",
+                                                          "FieldFunction": {
+                                                            "Type": "Constant",
+                                                            "Value": 0.7,
+                                                            "Skip": false
+                                                          },
+                                                          "Positions": {
+                                                            "Type": "Mesh2D",
+                                                            "Skip": false,
+                                                            "PointsY": 0,
+                                                            "PointGenerator": {
+                                                              "Type": "Mesh",
+                                                              "Jitter": 0.2,
+                                                              "ScaleX": 2500,
+                                                              "ScaleY": 2500,
+                                                              "ScaleZ": 2500,
+                                                              "Seed": "Arrakis_Islands"
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "ReturnType": {
+                                                        "Type": "Curve",
+                                                        "Curve": {
+                                                          "Type": "Manual",
+                                                          "Points": [
+                                                            {
+                                                              "In": 350,
+                                                              "Out": 0
+                                                            },
+                                                            {
+                                                              "In": 900,
+                                                              "Out": 1.1
+                                                            },
+                                                            {
+                                                              "In": 950,
+                                                              "Out": 3
+                                                            }
+                                                          ]
+                                                        }
+                                                      },
+                                                      "DistanceFunction": {
+                                                        "Type": "Euclidean"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "Delimiters": [
+                                                  {
+                                                    "From": -1,
+                                                    "To": -0.8,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 120 x 60 m, lean 45 deg, crest 25 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 45,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.625,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 60,
+                                                                            "Y": 1,
+                                                                            "Z": 30
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 27,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -66,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 33,
+                                                                        "Out": 0.20833
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.8,
+                                                    "To": -0.62,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 100 x 70 m, lean 10 deg, crest 12 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 10,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.3,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 50,
+                                                                            "Y": 1,
+                                                                            "Z": 35
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 22.5,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -55,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 27.5,
+                                                                        "Out": 0.1
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.62,
+                                                    "To": -0.46,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 90 x 44 m, lean 30 deg, crest 35 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 30,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.875,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 45,
+                                                                            "Y": 1,
+                                                                            "Z": 22
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 20.25,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -49.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 24.75,
+                                                                        "Out": 0.29167
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.46,
+                                                    "To": -0.34,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 50 x 36 m, lean 55 deg, crest 55 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 55,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 1.375,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 25,
+                                                                            "Y": 1,
+                                                                            "Z": 18
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 18,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -27.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 13.75,
+                                                                        "Out": 0.45833
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.34,
+                                                    "To": -0.16,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 110 x 56 m, lean 20 deg, crest 5 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 20,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.125,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 55,
+                                                                            "Y": 1,
+                                                                            "Z": 28
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 24.75,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -60.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 30.25,
+                                                                        "Out": 0.04167
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.16,
+                                                    "To": -0.02,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 70 x 40 m, lean 40 deg, crest 8 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 40,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.2,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 35,
+                                                                            "Y": 1,
+                                                                            "Z": 20
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 18,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -38.5,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 19.25,
+                                                                        "Out": 0.06667
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  {
+                                                    "From": -0.02,
+                                                    "To": 0.1,
+                                                    "Density": {
+                                                      "$Comment": "Wedge 40 x 28 m, lean 30 deg, crest 4 m above the sand.",
+                                                      "Type": "Anchor",
+                                                      "Reversed": false,
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Rotator",
+                                                          "NewYAxis": {
+                                                            "X": 0,
+                                                            "Y": 1,
+                                                            "Z": 0
+                                                          },
+                                                          "SpinAngle": 30,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Min",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "$Comment": "Footprint: steep rim all round.",
+                                                                  "Type": "Multiplier",
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "Constant",
+                                                                      "Value": 0.1,
+                                                                      "Skip": false
+                                                                    },
+                                                                    {
+                                                                      "Type": "Sum",
+                                                                      "Skip": false,
+                                                                      "Inputs": [
+                                                                        {
+                                                                          "Type": "Ellipsoid",
+                                                                          "Skip": false,
+                                                                          "Spin": 0,
+                                                                          "Curve": {
+                                                                            "Type": "Manual",
+                                                                            "Points": [
+                                                                              {
+                                                                                "In": 0,
+                                                                                "Out": 1
+                                                                              },
+                                                                              {
+                                                                                "In": 1,
+                                                                                "Out": 0
+                                                                              },
+                                                                              {
+                                                                                "In": 3,
+                                                                                "Out": -2
+                                                                              }
+                                                                            ]
+                                                                          },
+                                                                          "Scale": {
+                                                                            "X": 20,
+                                                                            "Y": 1,
+                                                                            "Z": 14
+                                                                          },
+                                                                          "NewYAxis": {
+                                                                            "X": 0,
+                                                                            "Y": 1,
+                                                                            "Z": 0
+                                                                          }
+                                                                        },
+                                                                        {
+                                                                          "Type": "Normalizer",
+                                                                          "FromMin": -1,
+                                                                          "FromMax": 1,
+                                                                          "ToMin": -0.28,
+                                                                          "ToMax": 0.28,
+                                                                          "Skip": false,
+                                                                          "Inputs": [
+                                                                            {
+                                                                              "Type": "SimplexNoise2D",
+                                                                              "Scale": 18,
+                                                                              "Octaves": 2,
+                                                                              "Lacunarity": 2,
+                                                                              "Persistence": 0.5,
+                                                                              "Seed": "Arrakis_Outcrops_Edge",
+                                                                              "Skip": false
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "$Comment": "Ramp: rises along local +X (downwind), so the far end is cut off as a cliff by the footprint rim.",
+                                                                  "Type": "CurveMapper",
+                                                                  "Curve": {
+                                                                    "Type": "Manual",
+                                                                    "Points": [
+                                                                      {
+                                                                        "In": -22,
+                                                                        "Out": 0
+                                                                      },
+                                                                      {
+                                                                        "In": 11,
+                                                                        "Out": 0.03333
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Skip": false,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "XValue",
+                                                                      "Skip": false
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  }
+                                                ],
+                                                "DefaultValue": -1
+                                              },
+                                              "DistanceFunction": {
+                                                "Type": "Euclidean"
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "$Comment": "Small noise before stepping so shelf edges are not parallel lines.",
+                                          "Type": "Normalizer",
+                                          "FromMin": -1,
+                                          "FromMax": 1,
+                                          "ToMin": -0.008333333333333333,
+                                          "ToMax": 0.008333333333333333,
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "SimplexNoise2D",
+                                              "Scale": 28,
+                                              "Octaves": 2,
+                                              "Lacunarity": 2,
+                                              "Persistence": 0.5,
+                                              "Seed": "Arrakis_Rock_Rough",
+                                              "Skip": false
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "$Comment": "Local dune height above Base (copy of the dune noise), so rock heights are measured from the sand surface.",
+                                  "Type": "Clamp",
+                                  "WallA": 0,
+                                  "WallB": 0.3333333333333333,
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Normalizer",
+                                      "FromMin": -1,
+                                      "FromMax": 1,
+                                      "ToMin": -0.26666666666666666,
+                                      "ToMax": 0.4,
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "SimplexNoise2D",
+                                          "Scale": 400,
+                                          "Octaves": 4,
+                                          "Lacunarity": 2,
+                                          "Persistence": 0.5,
+                                          "Seed": "A",
+                                          "Skip": false
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$Comment": "B: 0 at Base, -1 at 120 m above Base.",
+                  "Type": "CurveMapper",
+                  "Curve": {
+                    "Type": "Manual",
+                    "Points": [
+                      {
+                        "In": -120,
+                        "Out": 1
+                      },
+                      {
+                        "In": 0,
+                        "Out": 0
+                      },
+                      {
+                        "In": 480,
+                        "Out": -4
+                      }
+                    ]
+                  },
+                  "Skip": false,
+                  "Inputs": [
+                    {
+                      "Type": "BaseHeight",
+                      "BaseHeightName": "Base",
+                      "Distance": true,
+                      "Skip": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
-
       ]
     }
   },
-
   "MaterialProvider": {
     "Type": "Solidity",
     "Solid": {
@@ -92,6 +2248,26 @@
               "Solid": "Rock_Bedrock"
             }
           }
+        },
+        {
+          "$Comment": "Blocks inside the rock volume are rock; everything else falls through to sand.",
+          "Type": "FieldFunction",
+          "FieldFunction": {
+            "Type": "Imported",
+            "Name": "Arrakis_Rock"
+          },
+          "Delimiters": [
+            {
+              "From": 0,
+              "To": 100,
+              "Material": {
+                "Type": "Constant",
+                "Material": {
+                  "Solid": "Rock_Sandstone_Red"
+                }
+              }
+            }
+          ]
         },
         {
           "Type": "Constant",
@@ -113,11 +2289,9 @@
       ]
     }
   },
-
   "EnvironmentProvider": {
     "Type": "Constant",
     "Environment": "Env_Arrakis"
   },
-
   "Props": []
 }
