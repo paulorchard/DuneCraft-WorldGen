@@ -138,7 +138,7 @@ Feedback (world "Arrakis v2"): "the large islands are really good". The small ou
 
 ## Round 2, stage 3 — wedge outcrops with a shared lean, fading with distance
 
-Status: deployed, previewed with the tool, not yet seen in game. Done before stage 2 (channels, basins, access) because of the feedback above.
+Status: accepted (world "Arrakis v3", log clean). Done before stage 2 (channels, basins, access) because of the feedback above.
 
 Engine facts used (from the 0.6.8 jar):
 
@@ -183,7 +183,7 @@ Against the eight points:
 
 1. Cluster: partly (unchanged; wedges that land on the island add lobes).
 2. Terraced: yes for islands and wedges in the preview.
-3. Wedges with a shared lean: yes in the preview. Which compass direction the lean points in game is unverified.
+3. Wedges with a shared lean: yes in the preview. WITHDRAWN in round 4: in game the wedges read as repeated single tilted planes with parallel stripes; round 4 part B replaces them with scaled-down islands and no shared lean.
 4. Size range and fade: yes in the preview: 600 m island, 150-250 m medium, 40-120 m small, none beyond about 600 m from the shore.
 5. Summit heights: yes for the island; wedge crests 4-60 m, including a tall narrow stack on a small footprint.
 6. Spires: no (stage 4).
@@ -192,11 +192,216 @@ Against the eight points:
 
 Play requirements: most wedges have a walk-up side in principle, but the ramp is terraced with 3-9 m risers, so true walk-up access is still stage 2 work. Hops: sand gaps in the chain are mostly under 200 m in the preview.
 
+Feedback (world "Arrakis v3"): islands and outcrops look good above ground. Round 2 stages 2, 4 and 5 (channels, spires, strata) were not done; round 3 replaces the strata plan.
+
+# Round 3 — rock below the sand, and what the rock is made of
+
+No shape above the sand may change in this round.
+
+## Round 3, part A — rock stays isolated underground
+
+Status: accepted (world "Arrakis v4", log clean, no `Took too long`).
+
+Confirmed cause. `Rock = A + B`. `A = terraced height + dune height` (units of 120 m); `B` is 0 at Base and keeps rising below it, to +0.67 at bedrock. Underground the rock boundary is therefore wherever `A > -B`, i.e. wherever the height field is above minus the depth. The stair-step curve passed negative heights straight through, and the height field falls away gently outside each body (island about 0.4-0.9 m per m, wedge rims 0.5-2 m per m), so every metre of depth moved the boundary 1-3 m outward and neighbouring bodies merged.
+
+Why flattening `B` alone is not enough. Dune height is added inside `A` so that rock heights are measured from the sand. With `B` flat below Base, rock below Base would be wherever `terraced + dune > 0`, which under a 40 m dune still reaches out to where the height field is -40 m: up to about 100 m beyond the visible footprint.
+
+Fix. One change, on the negative side of the stair-step `CurveMapper`: heights from 0 down to -4 m pass through as before; anything lower maps to -3 units, which no depth can bring back above zero. Points: `(-4.05 m, -360 m), (-4 m, -4 m), (0, 0)`, then the unchanged shelves. `B` is unchanged.
+
+Result:
+
+- Above the sand: identical (the curve is untouched for heights above 0).
+- A body's root is the area where the height field is above -4 m, carried straight down to bedrock. Its sides are vertical, so it does not widen with depth at all.
+- That area is wider than the visible footprint by 4 m divided by the local slope: about 2-8 m on wedge rims, up to about 13 m on the gentlest island shores. The strip between is a shelf buried 0-4 m under the sand.
+- Bodies 40 m apart at the surface stay at least about 14 m apart underground.
+
+Slice measurements (preview tool, 2400 x 2400 m around one island and its chain, 3 m cells):
+
+| | Before | After |
+| --- | --- | --- |
+| Rock showing above the sand | 48.2 ha | 48.2 ha |
+| Rock at Y = 40 | 111.3 ha (2.31 x) | 54.0 ha (1.12 x) |
+| Rock at Y = 10 | 198.8 ha (4.12 x) | 54.0 ha (1.12 x) |
+
+Images: `tools/preview/round3-underground-{before,after}_{y40,y10,vertical}.png`. Tool: `node tools/preview/slices.js <prefix> [rootCut|none]`.
+
+Feedback: root fix accepted. Round 3 part B (white shell darkening inward) was dropped before anything was built; no `Rock_Sandstone_White` was ever added.
+
+# Round 4 — materials by sand level, and outcrops as small islands
+
+Accepted and frozen: large islands, dunes, island positions, chain fade, spawn mask, round 3 root fix.
+
+## Round 4, part A — materials by sand level
+
+Status: accepted with one change (world "Arrakis v5", log clean): the upper block was switched from `Rock_Sandstone` to `Rock_Sandstone_White` on request.
+
+Engine fact (0.6.8 jar): `SimpleHorizontal` applies its material where `BottomY <= block Y < TopY`, each measured from its named base height. Outside that range it returns nothing and a surrounding `Queue` falls through.
+
+Setup. The rock entry of the `Solid` queue is still `FieldFunction(Imported "Arrakis_Rock")` with delimiter 0..100, but its material is now a `Queue`:
+
+1. `SimpleHorizontal`, `BottomY` -3 and `TopY` 1000, both on base height `Base` -> `Rock_Sandstone_White` (first deployed as `Rock_Sandstone`)
+2. `Constant` -> `Rock_Sandstone_Red`
+
+The sand floor's top block is Base - 1, so sandstone covers that block and the two below it (Y = 79, 78, 77 with Base = 80) and red starts at Y = 76. No number is hard-coded except the offsets; the rule follows `Base`.
+
+Removed: nothing. The single `Rock_Sandstone_Red` constant was replaced by the queue above.
+
+Feedback (world "Arrakis v5"): materials look good; change the upper sandstone to white sandstone. Done.
+
+## Round 4, part B (medium layer) — outcrops as small islands
+
+Status: FAILED in game (world "Arrakis v6"). Came out as 360 m discs filled edge to edge and cut along straight cell boundaries. Cause and repair are in round 5. The small layer still uses the round 2 wedges.
+
+Problem seen in game (Screenshots/repettive outcrops.png): wedges are single tilted planes with parallel terrace stripes, same-variant wedges are identical, and the shared lean reads as a pattern.
+
+Recipe. Same as the large island, scaled down, with the radius set per cell. No `Anchor`, no `Density` return type, no variants: every noise is sampled in world coordinates, so no two outcrops share an outline.
+
+- Positions: `Mesh2D` scale 320 (unchanged), jitter lowered 0.35 -> 0.25 so neighbours are at least about 160 m apart and rarely clip each other along the straight cell boundary. `MaxDistance` 180.
+- `v = WhiteNoise(cell) + shift(distance from island centre at the cell)`, shift 0 inside 380 m rising to 1.0 at 820 m, then 3 (same fade as round 2).
+- `invRadius = CellValue[ CurveMapper(v) ]`: v from -1 to 0 maps radius 100 m down to 55 m (as 1/radius); above 0 it is 10, which empties the cell. Default 10. Half the cells near an island are filled; the biggest drop out first with distance.
+- `distance`: `PositionsCellNoise` on the same positions, `Distance` return type. WRONG: this return type is not metres, see round 5.
+- `F = 1 - invRadius * (distance + 2) + lobes + detail`. The +2 m stops an empty cell leaving a one-block spike at its centre.
+  - lobes: `SimplexNoise2D` scale 75, 2 octaves, +/-0.4 (island: scale 230 for radius 300, ratio 0.77; here about 0.75-1.4 across the radius range).
+  - detail: scale 22, +/-0.04.
+- `cap = CurveMapper(SimplexNoise2D scale 60, 2 octaves)`: -1 -> 0.2, -0.2 -> 0.35, 0.2 -> 0.7, 0.6 -> 1.1. Gives one to three high points.
+- `height = CellValue[ 0.36 * radius(v) * variety ]`, variety from a second white noise: -1 -> 0.4, 0 -> 0.9, 1 -> 1.5. So crests run from about 8 m to about 54 m.
+- `outcrop = Min( height * Min(F, cap), 200 m * F )`. The second term only matters where `F < 0`: it makes the height fall away fast outside the footprint whatever the outcrop's height, so the round 3 root cut (-4 m) still leaves only a narrow buried shelf. Without it a low outcrop would have a shelf reaching far out.
+- Then the shared `Max`, jitter and stair-step curve as before.
+
+What did not work in the preview:
+
+- Lobes scale 62 +/-0.5 with detail scale 16 +/-0.06: outlines crumbled into fragments. Scale 75 +/-0.4 with detail 22 +/-0.04 holds each outcrop together as one body with bays.
+
+Limits of this recipe:
+
+- Noise scale cannot follow the radius continuously (a noise node has one fixed scale), so it is set once per layer for the middle of the layer's radius range.
+- Elongation comes only from the lobe noise; there is no deliberate stretch.
+- Two filled neighbouring cells that reach each other meet along a straight cell boundary. The lower jitter makes this uncommon, not impossible.
+
+Checks:
+
+- Large island: the island branch of the biome JSON is byte-identical to the previous build. Outcrops that overlap the island shore differ, as they always have.
+- Slices (2400 x 2400 m, 3 m cells): rock above the sand 43.7 ha, at Y = 40 49.2 ha (1.12 x), at Y = 10 49.2 ha (1.12 x).
+
+Feedback (world "Arrakis v6"): medium outcrops are big circular discs about 350 m across with clean circular edges, some cut along dead-straight lines, filled with a busy terrace texture, crowding and overlapping the large island.
+
+# Round 5 — outcrop repair, then a starting outcrop and a guaranteed island
+
+Accepted and frozen: large islands, dunes away from spawn, the sand-level material rule, the underground root fix.
+
+## Round 5, stage 1 — diagnose the discs, fix the preview, repair the medium layer
+
+Status: loaded in game as "Arrakis v7" (log clean, no `Took too long`). No comment on the medium outcrops themselves; the feedback was that the spawn outcrop and nearby island were missing, which were later stages.
+
+### Confirmed cause of the discs
+
+It was not `CellValue`. From the 0.6.8 jar:
+
+- `CellValue` does what round 4 assumed: it evaluates its `Density` with the position set to the closest cell position and returns that; with no position inside `MaxDistance` it returns `DefaultValue`.
+- The `Distance` return type does NOT return metres. It returns `distance / MaxDistance * 2 - 1`, i.e. -1 at the cell position and +1 at `MaxDistance`, and 1 when there is no position.
+- A `Curve` return type is the one that receives the raw distance in metres.
+
+Round 4 computed `F = 1 - invRadius * (distance + 2)` with that normalised value, so the falloff term was about 0.01-0.05 instead of 0-2. `F` stayed near 1 across the whole lookup, and rock stopped only where the lookup stopped: a disc of radius `MaxDistance` (180 m), cut where a neighbouring cell was closer.
+
+### Preview correction
+
+- The Node model had the same wrong assumption; `engine.js` now normalises the `Distance` return type like the game.
+- New: `tools/preview/RealPreview.java` runs the game's own generator classes from `HytaleServer.jar` outside the game. It loads the pack's biome and world structure through the real asset codecs, builds the terrain density with a real world seed, and renders a shaded top-down PNG plus underground rock areas. Run it with `tools/preview/real.sh <seed> <out.png> [centreX centreZ size metresPerPixel]`; it writes the current `graph.js` into a scratch copy of the pack first. About 2 seconds for 800 x 800 columns.
+  - How it gets round the round 1 dead end: it sets the parsed options and a bare `HytaleServer` object with an event bus by reflection, which is all the asset stores need. Materials are skipped (block types are not loaded), so it follows `BasicWorldStructureAsset.build` and `BiomeAsset.build` by hand for the framework and terrain only.
+  - Seed: the world's `Seed` from `universe/worlds/default/config.json`, cast to int, into `SeedBox`.
+- Comparison done before asking for a look:
+  - Seed of "Arrakis v6" with the round 4 biome reproduces the discs and straight cuts (`round5-discs-reproduced-v6.png`).
+  - Seed of "Arrakis v4" reproduces the island in Screenshots/repettive outcrops.png feature for feature, same orientation: two holes, west peninsula, round islet to the south-west, south finger (`round5-seed-check-v4-island.png`, island centre near (1350, -1450)).
+- The Node model is now only a rough sketch tool. Decisions in this round were made on the real preview.
+
+### Repaired medium recipe
+
+Still `CellValue` for per-cell values (it was never the fault), still all noise in world coordinates.
+
+- Positions: `Mesh2D` scale 400, jitter 0.14, `MaxDistance` 200. Neighbouring positions are at least 288 m apart, so each cell reaches at least 144 m from its position.
+- Survival: `v = WhiteNoise(cell) + shift`, shift from the distance to the nearest island centre: 3 inside 450 m (no outcrop cells on the island or against its shore), 0 at 450 m rising to 1.8 at 1000 m, then 3. A cell is filled when `v < 0.8`: 90% at 450 m, none beyond about 1000 m (about 600 m from the shore).
+- Size is separate from survival (in the first repair attempt both came from `v`, so the big sizes only existed right at the inner edge): `1 / radius = CellValue[ Max(gate(v), sizeCurve(WhiteNoise "Size") * shrink) ]`, radius 50 m .. 72 m .. 97 m across the white noise range, shrinking to 0.8 x by 1000 m from the island.
+- `distance`: `PositionsCellNoise` with a `Curve` return type, identity curve 0 -> 0, 200 -> 200. Metres.
+- `F = Min( 1 - (distance + 2) / radius + lobes + detail, safety )`
+  - lobes: `SimplexNoise2D` scale 75, 2 octaves, persistence 0.35, +/-0.45.
+  - detail: scale 22, +/-0.03.
+  - safety fade: `PositionsCellNoise` `Curve` return 0..128 m -> +5, 140 m -> -5. 140 m is 70% of `MaxDistance` and inside every cell, so no radius value can produce a disc or reach a cell boundary. The largest footprint the recipe itself can make is 97 * 1.48 = 144 m, so the fade only trims the extreme case.
+- cap: `SimplexNoise2D` scale 85, 2 octaves, persistence 0.3, curve -1 -> 0.3, -0.2 -> 0.45, 0.2 -> 0.8, 0.6 -> 1.1.
+- height: `CellValue[ 0.4 * radius * variety ]`, variety 0.4 .. 0.9 .. 1.4 from a third white noise. Crests about 8-54 m.
+- `outcrop = Min( height * Min(F, cap), 200 m * F )`, then the shared `Max`, jitter and stair-step curve.
+
+What did not work on the way (real preview):
+
+- Radius 28-75 m with grid 320: pieces came out about 50 m across and nearly flat.
+- Size and survival both from `v`: only six small pieces per island.
+- Cap noise scale 45 and lobes scale 60: the busy, cramped terrace texture from the feedback. Smoother cap (scale 85, persistence 0.3) and lobes (scale 75, persistence 0.35) with height 0.4 x radius read as calm as the island.
+
+Result on the "Arrakis v6" seed (`round5-medium-v6-wide.png`, `round5-medium-v6-zoom.png`): about 6-8 medium outcrops per island, roughly 90-190 m across, irregular outlines, closed contours, no circular arcs or straight edges seen across the two chains inspected. Underground (real generator, 2400 x 2400 m, 3 m cells): rock above the sand 44.1 ha, at Y = 40 47.9 ha (1.09 x), at Y = 10 47.9 ha (1.09 x).
+
+Changed from what was asked to be kept: the medium position set went from scale 320 jitter 0.35 to scale 400 jitter 0.14. That is what guarantees an outcrop of up to about 250 m fits inside its own cell.
+
+Feedback (world "Arrakis v7"): no small island at spawn and no large island close by. Correct for that build: in v7 the nearest islands were about 1.8-2.5 km west and north-west. Stages 2, 3, 4 and 5 were then done together.
+
+## Round 5, stages 2-5 — small layer, starting outcrop and pad, routes, guaranteed island
+
+Status: deployed, checked with the real-generator preview on seeds 1791406138722 ("Arrakis v7"), 1791405124027 ("Arrakis v6"), 42 and 7. Not yet seen in game.
+
+### Small layer (stage 2)
+
+Same repaired recipe as the medium layer; the round 2 wedges are no longer used.
+
+- Positions: `Mesh2D` scale 150, jitter 0.14, `MaxDistance` 77. Safety fade to no rock by 54 m.
+- Radius 14 .. 22 .. 36 m (about 30-100 m across), shrinking to 0.8 x by 1000 m from the island.
+- Filled when `v < 0`: half the cells at 400 m from an island centre, none beyond 1000 m. No cells inside 400 m.
+- Lobes scale 28 +/-0.45 (persistence 0.35), detail scale 9 +/-0.03, cap scale 32 (persistence 0.3).
+- Height 0.45 x radius x variety; variety 0.3 .. 0.9 .. 1.3 for most cells, 3.5-4.5 for the top 7% (tall stacks, up to about 60 m on a small footprint).
+
+### Guaranteed island (stage 5)
+
+- Island centres are now `Union[ List[(640, 0, -480)], FieldFunction[ grid ] ]`.
+  - The guaranteed centre is 800 m from spawn, to the north-east (east is +X, north is -Z). With the 300 m nominal radius its near shore is about 500 m from spawn. Fixed direction for now.
+  - The grid (`Offset 900 > Occurrence 0.7 > Mesh2D 2500 jitter 0.2`, unchanged) is filtered by a `FieldFunction` position provider: a `PositionsCellNoise` on the guaranteed centre with a `Curve` return 0 below 1200 m and 1 from 1200 m, delimiter 0.5..2. Grid centres within 1200 m of the guaranteed island are dropped.
+- Every use of the island positions (radial falloff, both outcrop fades) uses the union, so the guaranteed island gets a normal chain.
+- Stepping stones: near spawn the small layer's survival shift is capped, so about 30% of small cells within 280 m of the origin are filled whatever the island distance. The medium layer has no cells within 350 m of spawn.
+
+### Dune fade at spawn (stage 3)
+
+- Dune branch noise term is now `(Clamp(noise) + 1) * t - 1`, where `t = CurveMapper(distance from origin + wobble)`, wobble `SimplexNoise2D` scale 160, +/-45 m, and the curve is 0 at 165 m, 1 at 275 m. So `t` is 0 within 120 m of the origin and exactly 1 from 320 m outwards: dunes beyond 320 m are unchanged. This is wider than the 250 m asked for; see "did not work".
+- The copy of the dune height inside the rock graph uses the same nodes, so rock heights stay sand-relative.
+
+### Starting outcrop and landing pad (stages 3 and 4)
+
+- Not part of any position set: it is built from `Distance` (distance from the world origin), so it exists in every world.
+- `F = 1 - d / 100 + lobes + detail`, lobes `SimplexNoise2D` scale 75 +/-0.3, world coordinates, so the outline differs per seed. About 140-260 m across.
+- Natural height: `Min(30 m * F, cap) + lookout`
+  - cap: noise scale 70 mapped to 6 .. 10 .. 15 m.
+  - lookout: up to +20 m where `Abs(SimplexNoise2D scale 110)` is above 0.3, limited to where `F` is above 0.25. Measured high points on four seeds: 31-33 m above sand level, each in a different place 45-65 m from the origin.
+- Not terraced. The stair-step curve has 3-9 m risers, which no route could cross; a smooth height field quantised to blocks gives steps of 1 block wherever the slope is below 1, which is nearly everywhere here.
+- Pad: `height = 10 m + (natural - 10 m) * w`, `w` = 0 within 16 m of the origin and 1 from 45 m. So the pad is exactly Base + 10 in every world (top block Y = 89, standing at Y = 90), nothing inside it is higher, and the natural shape takes over smoothly.
+- Other rock: islands and outcrop layers are masked out within 30 m of the origin (replaces the old 70-90 m spawn mask), then `Max` with the starting outcrop.
+- Root cut applied through an identity `CurveMapper` with the same -4 m cut.
+- Spawn in `WorldStructures/Arrakis.json`: (0.5, 91, 0.5), i.e. Base + pad height + 1.
+
+Real-generator checks (`WALK=1 tools/preview/real.sh <seed> out.png 0 0 800 1` adds a flood fill from the origin that only crosses height changes of 1 block or less):
+
+- Pad top block Y = 89 across the whole 15 m radius on all four seeds.
+- Sand reached from the pad without a step over 1 block in all eight compass directions on all four seeds; about 32,000-34,000 m2 of rock is walkable from the pad.
+- Underground: rock above the sand 43.9 ha, at Y = 40 and Y = 10 46.9 ha (1.07 x).
+- 4-6 small outcrops within about 300 m of spawn on the v7 seed, between spawn and the guaranteed island.
+
+What did not work:
+
+- Dune fade by clipping the dune noise against a cone (`Min(noise, ramp)`): a clean circular scarp about 190 m from spawn. Scaling instead of clipping removed the crease but the edge was still a circle. Perturbing the distance with noise before the fade curve makes the edge wander; that needs room on both sides, hence 320 m rather than 250 m. A dune front is still visible in places as a steep bank; it is no longer an arc.
+- Pad by clamping the natural height between two cones (floor and ceiling easing away from the pad): a visible disc with radial facets. The weighted blend above has no crease.
+
+Against the play requirements: starts on rock (yes), fixed pad height (yes), two walkable routes (yes, eight), flat bench about 30 x 30 m besides the pad (not measured; the low cap gives broad gentle ground but nothing forces a flat bench), island shore about 500 m away (yes, fixed direction), 3-6 small outcrops within 300 m (yes on the seed checked).
+
 Feedback: _pending_
 
 ## Dead ends
 
-- Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server.
+- Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).
+- Trusting the Node model for node semantics: it shared my wrong assumption about the `Distance` return type, so preview and game disagreed (round 4 discs).
 
 ## Docs vs vanilla field names
 

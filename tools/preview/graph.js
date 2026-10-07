@@ -10,8 +10,10 @@ const m = metres => metres / UNIT;
 
 // Stair-step curve in metres. levels: ascending shelf heights. ramps: indices of intervals left as plain slopes.
 // On a tread the output rises only `tilt` of the interval; the rest is made up in a short riser at the end.
-function terraceCurve(levels, ramps, riser = 0.15, tilt = 0.12) {
-  const pts = [[-UNIT, -UNIT], [0, 0]];
+function terraceCurve(levels, ramps, rootCut, riser = 0.15, tilt = 0.12) {
+  // Negative side: without rootCut the height passes straight through (round 2 behaviour).
+  // With rootCut, heights down to -rootCut m pass through and anything lower becomes -3 units: no rock at any depth.
+  const pts = rootCut ? [[-rootCut - 0.05, -3 * UNIT], [-rootCut, -rootCut], [0, 0]] : [[-UNIT, -UNIT], [0, 0]];
   for (let i = 0; i < levels.length - 1; i++) {
     const a = levels[i], b = levels[i + 1];
     if (ramps.includes(i)) { pts.push([b, b]); continue; }
@@ -22,7 +24,10 @@ function terraceCurve(levels, ramps, riser = 0.15, tilt = 0.12) {
 }
 
 function makeRock(P) {
-  const islandPositions = {
+  const dist0 = (pts, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'Distance', Skip: false, Curve: curve(pts) }); // distance from the world origin
+  const G = P.guaranteedIsland;
+  const guaranteed = { Type: 'List', Skip: false, Positions: [{ X: G.x, Y: 0, Z: G.z }] };
+  const gridIslands = {
     $Comment: 'Offset keeps island centres away from the fixed spawn at the origin.',
     Type: 'Offset', Skip: false, OffsetX: 900, OffsetY: 0, OffsetZ: 900,
     Positions: {
@@ -32,9 +37,32 @@ function makeRock(P) {
         PointGenerator: { Type: 'Mesh', Jitter: 0.2, ScaleX: 2500, ScaleY: 2500, ScaleZ: 2500, Seed: 'Arrakis_Islands' } }
     }
   };
-  if (P.previewIslandAt) { islandPositions.Positions = { Type: 'List', Positions: [{ X: P.previewIslandAt[0] - 900, Y: 0, Z: P.previewIslandAt[1] - 900 }] }; }
+  const islandPositions = P.previewIslandAt
+    ? { Type: 'List', Skip: false, Positions: [{ X: P.previewIslandAt[0], Y: 0, Z: P.previewIslandAt[1] }] }
+    : { $Comment: `Large island centres: one guaranteed island at (${G.x}, ${G.z}), plus the regular grid with every centre within ${G.clear} m of it removed.`,
+        Type: 'Union', Skip: false, Positions: [
+          guaranteed,
+          { $Comment: 'Keep only grid centres far enough from the guaranteed island.', Type: 'FieldFunction', Skip: false,
+            FieldFunction: { Type: 'PositionsCellNoise', Skip: false, MaxDistance: G.clear + 100, Positions: guaranteed,
+              ReturnType: { Type: 'Curve', Curve: curve([[G.clear - 1, 0], [G.clear, 1]]) }, DistanceFunction: { Type: 'Euclidean' } },
+            Delimiters: [{ Min: 0.5, Max: 2 }],
+            Positions: gridIslands }
+        ] };
 
-  const duneHeight = node('Clamp', [norm(m(-0.8 * 40), m(1.2 * 40), noise2d(400, 4, 'A'))], { WallA: 0, WallB: m(40) },
+  const S = P.start;
+  // Same node the dune branch gets: the clamped dune noise, forced down to "no dune" near the origin.
+  // Dune fade at spawn. The clamped dune noise n (-1 = no dune) is scaled towards -1: n' = (n + 1) * t - 1,
+  // with t = 0 near the origin and exactly 1 from duneFadeEnd outwards, so dunes beyond that are unchanged.
+  // Scaling shrinks each dune in place; clipping against a cone (first attempt) left a visible circular scarp.
+  const duneNoise = () => node('Sum', [c(-1), node('Multiplier', [
+    node('Sum', [node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }), c(1)]),
+    node('CurveMapper', [node('Sum', [
+      dist0([[0, 0], [2000, 2000]], 'Distance from the origin in metres.'),
+      norm(-S.duneFadeWobble, S.duneFadeWobble, noise2d(160, 2, 'Arrakis_Start_DuneFade'), 'Wobble, so the cleared area is not a circle.')
+    ])], { Curve: curve([[S.duneFadeStart + S.duneFadeWobble, 0], [S.duneFadeEnd - S.duneFadeWobble, 1]]) },
+      `Dune fade weight: 0 within ${S.duneFadeStart} m of the origin, exactly 1 from ${S.duneFadeEnd} m; the edge between wanders by +/-${S.duneFadeWobble} m.`)
+  ])]);
+  const duneHeight = node('Clamp', [norm(m(-0.8 * 40), m(1.2 * 40), duneNoise())], { WallA: 0, WallB: m(40) },
     'Local dune height above Base (copy of the dune noise), so rock heights are measured from the sand surface.');
 
   // ---- Large islands ----
@@ -55,7 +83,7 @@ function makeRock(P) {
   const islandPre = node('Min', [edge, cap], null, 'Large island height before terracing.');
   const preStepOf = shapes => node('Sum', [node('Max', shapes, null, 'Rock height above the sand before terracing.'),
     norm(m(-I.stepJitter), m(I.stepJitter), noise2d(28, 2, 'Arrakis_Rock_Rough'), 'Small noise before stepping so shelf edges are not parallel lines.')]);
-  const terraced = shapes => node('CurveMapper', [preStepOf(shapes)], { Curve: terraceCurve(I.levels, I.ramps) },
+  const terraced = shapes => node('CurveMapper', [preStepOf(shapes)], { Curve: terraceCurve(I.levels, I.ramps, P.rootCut) },
     'Terraces: stair-step curve, shelves ' + I.levels.join(', ') + ' m. Negative = no rock.');
 
   // ---- Outcrops: terraced wedges in two size layers, thinning out away from the large islands ----
@@ -87,19 +115,104 @@ function makeRock(P) {
       Delimiters: ranges(L.variants).map(wedge), DefaultValue: -1 },
     DistanceFunction: { Type: 'Euclidean' }
   });
-  const outcropLayers = [layer(O.medium, 'Medium'), layer(O.small, 'Small')];
+  // ---- Round 4: an outcrop built like the large island, scaled down, with a radius that differs per cell ----
+  // All noise is sampled in world coordinates (no Anchor), so no two outcrops share an outline.
+  const islandLike = (L, name) => {
+    const positions = { Type: 'Mesh2D', Skip: false, PointsY: 0, PointGenerator: { Type: 'Mesh', Jitter: L.jitter, ScaleX: L.grid, ScaleY: L.grid, ScaleZ: L.grid, Seed: 'Arrakis_Outcrops_' + name } };
+    const fill = 2 * L.fill;
+    // v = white noise at the cell position + a shift that grows with distance from the nearest large island.
+    // v runs from -1 (biggest) to -1 + fill (smallest); above that the cell is empty.
+    const islandShift = () => ({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.fadeEnd + 100, Positions: islandPositions,
+      ReturnType: { Type: 'Curve', Curve: curve([[L.fadeStart - 1, 3], [L.fadeStart, 0], [L.fadeEnd, fill], [L.fadeEnd + 50, 3]]) }, DistanceFunction: { Type: 'Euclidean' } });
+    // Near spawn: either no cells at all (spawnClear), or a guaranteed share of filled cells (spawnShare within spawnRadius).
+    const shift = () => L.spawnShare
+      ? node('Min', [islandShift(), dist0([[L.spawnRadius, fill * (1 - L.spawnShare)], [L.spawnRadius + 80, 3]], `Near spawn about ${Math.round(L.spawnShare * 100)}% of cells are filled whatever the island distance, so there are stepping stones.`)])
+      : node('Max', [islandShift(), dist0([[L.spawnClear, 3], [L.spawnClear + 1, 0]], `No cells of this layer within ${L.spawnClear} m of spawn.`)]);
+    const v = () => node('Sum', [{ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_Choice_' + name, Skip: false }, shift()]);
+    const cellValue = (density, def, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.maxDistance, Positions: positions,
+      ReturnType: { Type: 'CellValue', Density: density, DefaultValue: def }, DistanceFunction: { Type: 'Euclidean' } });
+    const white = tag => ({ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_' + tag + '_' + name, Skip: false });
+    // Size is independent of survival: its own white noise per cell, shrunk further from the island.
+    const islandDistance = pts => ({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.fadeEnd + 100, Positions: islandPositions,
+      ReturnType: { Type: 'Curve', Curve: curve(pts) }, DistanceFunction: { Type: 'Euclidean' } });
+    const invRadius = cellValue(node('Max', [
+      node('CurveMapper', [v()], { Curve: curve([[-1 + fill, 0], [-1 + fill + 0.01, 10]]) }, 'Gate: 0 when the cell is filled, 10 (radius 0.1 m) when it is empty.'),
+      node('Multiplier', [
+        node('CurveMapper', [white('Size')], { Curve: curve(L.radiusCurve.map(([w, r]) => [w, 1 / r])) }, '1 / radius from a per-cell white noise: ' + L.radiusCurve.map(([w, r]) => r + ' m').join(' .. ') + '.'),
+        islandDistance([[L.fadeStart, 1], [L.fadeEnd, 1 / L.farShrink]])
+      ], null, `Radius shrinks to ${L.farShrink} x by ${L.fadeEnd} m from the island centre.`)
+    ]), 10, '1 / radius for this cell.');
+    const heightScale = cellValue(node('Multiplier', [
+      node('CurveMapper', [white('Size')], { Curve: curve(L.radiusCurve.map(([w, r]) => [w, m(L.heightPerRadius * r)])) }),
+      node('CurveMapper', [white('Height')], { Curve: curve(L.heightVariety) })
+    ]), 0, `Height for this cell: ${L.heightPerRadius} x radius, times a per-cell variety factor.`);
+    const cellCurve = (pts, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.maxDistance, Positions: positions,
+      ReturnType: { Type: 'Curve', Curve: curve(pts) }, DistanceFunction: { Type: 'Euclidean' } });
+    // Metres from the cell position. A Curve return type receives the raw distance; the Distance return type does not (it returns -1..1).
+    const distance = cellCurve([[0, 0], [L.maxDistance, L.maxDistance]], 'Distance from the cell position in metres.');
+    const safeRadius = 0.7 * L.maxDistance;
+    const safety = () => cellCurve([[0, 5], [safeRadius - 12, 5], [safeRadius, -5]], `Safety fade: no rock beyond ${safeRadius.toFixed(0)} m from the cell position (70% of MaxDistance, and inside the cell), whatever the radius says.`);
+    const rawF = node('Sum', [
+      c(1), node('Multiplier', [c(-1), invRadius, node('Sum', [distance, c(2)])], null, 'Radial falloff: 1 at the cell position, 0 at the radius.'),
+      norm(-L.lobeAmp, L.lobeAmp, noise2d(L.lobeScale, 2, 'Arrakis_Outcrops_Lobes_' + name, 0.35), 'Lobes, world coordinates.'),
+      norm(-L.detailAmp, L.detailAmp, noise2d(L.detailScale, 2, 'Arrakis_Outcrops_Coast_' + name), 'Outline detail, world coordinates.')
+    ], null, 'Outcrop field before the safety fade.');
+    const copy = n => JSON.parse(JSON.stringify(n));
+    const F = node('Min', [rawF, safety()], null, 'Outcrop field F: > 0 is rock.');
+    const cap = node('CurveMapper', [noise2d(L.capScale, 2, 'Arrakis_Outcrops_Tops_' + name, 0.3)], { Curve: curve(L.capCurve) }, 'Cap: benches where the noise is low, high points where it is high.');
+    return node('Min', [
+      node('Multiplier', [heightScale, node('Min', [F, cap])], null, 'Height above the sand: the height of this cell times the capped field.'),
+      node('Multiplier', [c(+m(200).toFixed(5)), copy(F)], null, 'Outside the footprint fall away at 200 m per unit of F whatever the height, so the buried shelf stays narrow (round 3 root fix).')
+    ], null, `${name} outcrops: small islands.`);
+  };
+  const outcropLayersAll = [O.medium.islandLike ? islandLike(O.medium, 'Medium') : layer(O.medium, 'Medium'), O.small.islandLike ? islandLike(O.small, 'Small') : layer(O.small, 'Small')];
+  const outcropLayers = process.env.ONLY_LAYER ? [outcropLayersAll[+process.env.ONLY_LAYER]] : outcropLayersAll; // ONLY_LAYER is a preview aid
 
-  const spawnMask = { $Comment: 'No rock within about 70 m of the fixed spawn at the origin.', Type: 'Distance', Skip: false, Curve: curve([[0, -3], [70, -3], [90, 5]]) };
-  const A = node('YOverride', [node('Cache', [node('Min', [spawnMask,
-    node('Sum', [terraced([islandPre, ...outcropLayers]), duneHeight])
-  ])], { Capacity: 3 })], { Value: 0 }, `A: rock top height above Base in units of ${UNIT} m, per column. Negative = no rock.`);
+  // ---- Starting outcrop at the origin (always present; not part of any position set) ----
+  const startF = () => node('Sum', [
+    dist0([[0, 1], [2 * S.radius, -1]], `Radial falloff from the origin: 0 at ${S.radius} m.`),
+    norm(-S.lobeAmp, S.lobeAmp, noise2d(S.lobeScale, 2, 'Arrakis_Start_Lobes', 0.35), 'Lobes, world coordinates: the outline differs per seed.'),
+    norm(-0.03, 0.03, noise2d(22, 2, 'Arrakis_Start_Coast'))
+  ], null, 'Starting outcrop field: > 0 is rock.');
+  const startNatural = node('Sum', [
+    node('Min', [
+      node('Multiplier', [c(+m(S.edgeMetres).toFixed(5)), startF()]),
+      node('CurveMapper', [noise2d(70, 2, 'Arrakis_Start_Tops', 0.3)], { Curve: curve(S.capCurve.map(([i, o]) => [i, m(o)])) }, 'Low, walkable top.')
+    ]),
+    node('Clamp', [node('Min', [
+      node('CurveMapper', [node('Abs', [noise2d(S.lookoutScale, 1, 'Arrakis_Start_Lookout')])], { Curve: curve([[S.lookoutFrom, 0], [S.lookoutFrom + 0.25, m(S.lookoutExtra)]]) }),
+      node('CurveMapper', [startF()], { Curve: curve([[0.25, 0], [0.55, m(S.lookoutExtra + 2)]]) })
+    ])], { WallA: 0, WallB: m(S.lookoutExtra) }, 'Lookout: an extra rise where a ridged noise is high, kept inside the outcrop.')
+  ], null, 'Starting outcrop height before the pad is blended in. Not terraced, so slopes stay walkable.');
+  // Pad: height = pad + (natural - pad) * w, with w = 0 inside the pad and 1 from padBlendEnd outwards.
+  // A weighted blend has no crease; clamping between two cones (first attempt) left a visible disc with radial facets.
+  const start = node('CurveMapper', [node('Sum', [
+    c(+m(S.padHeight).toFixed(5)),
+    node('Multiplier', [
+      node('Sum', [startNatural, c(+m(-S.padHeight).toFixed(5))]),
+      dist0([[S.padRadius, 0], [S.padRadius + 0.3 * (S.padBlendEnd - S.padRadius), 0.15], [S.padRadius + 0.7 * (S.padBlendEnd - S.padRadius), 0.85], [S.padBlendEnd, 1]],
+        `Blend weight: 0 within ${S.padRadius} m of the origin, 1 from ${S.padBlendEnd} m.`)
+    ])
+  ])], { Curve: curve([[m(-P.rootCut - 0.05), -3], [m(-P.rootCut), m(-P.rootCut)], [2, 2]]) },
+    `Starting outcrop with landing pad: flat at Base + ${S.padHeight} m within ${S.padRadius} m of the origin. The curve only applies the root cut.`);
+  const others = node('Min', [terraced([islandPre, ...outcropLayers]),
+    dist0([[S.othersClear, -3], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the pad.`)]);
+  const A = node('YOverride', [node('Cache', [
+    node('Sum', [node('Max', [others, start], null, 'Rock top above the local sand surface. Negative = no rock.'), duneHeight])
+  ], { Capacity: 3 })], { Value: 0 }, `A: rock top height above Base in units of ${UNIT} m, per column. Negative = no rock.`);
   const B = node('CurveMapper', [{ Type: 'BaseHeight', BaseHeightName: 'Base', Distance: true, Skip: false }],
     { Curve: curve([[-UNIT, 1], [0, 0], [4 * UNIT, -4]]) }, `B: 0 at Base, -1 at ${UNIT} m above Base.`);
-  return { A, B, duneHeight, UNIT,
+  return { A, B, duneHeight, duneNoise, UNIT,
     rock: { $Comment: `Rock. Solid where A + B > 0, i.e. up to ${UNIT} m * A above Base.`, Type: 'Exported', ExportAs: 'Arrakis_Rock', SingleInstance: true, Skip: false, Inputs: [node('Sum', [A, B])] } };
 }
 
 const PARAMS = {
+  // Rock more than this many metres below the sand surface height field is removed, so roots go straight down.
+  rootCut: 4,
+  guaranteedIsland: { x: 640, z: -480, clear: 1200 },
+  start: { radius: 100, lobeAmp: 0.3, lobeScale: 75, edgeMetres: 30, capCurve: [[-1, 6], [0, 10], [1, 15]],
+    lookoutScale: 110, lookoutFrom: 0.3, lookoutExtra: 20,
+    padRadius: 16, padHeight: 10, padBlendEnd: 45, othersClear: 30, duneFadeStart: 120, duneFadeEnd: 320, duneFadeWobble: 45 },
   island: {
     radius: 300, lobeAmp: 0.62, lobeScale: 230, detailAmp: 0.05, detailScale: 60,
     edgeMetres: 110, capScale: 210,
@@ -111,9 +224,17 @@ const PARAMS = {
   outcrops: {
     windAngle: 30, rimSteepness: 3, edgeNoise: 0.28,
     // variants: [shareOfCells, semiLengthAlongLean, semiWidth, leanOffsetDeg, crestMetres]; biggest first
-    medium: { grid: 320, jitter: 0.35, maxDistance: 180, fadeStart: 380, fadeEnd: 820, variants: [
+    medium: { islandLike: true, spawnClear: 350, grid: 400, jitter: 0.14, maxDistance: 200, fadeStart: 450, fadeEnd: 1000,
+      fill: 0.9, radiusCurve: [[-1, 50], [0, 72], [1, 97]], farShrink: 0.8,
+      lobeAmp: 0.45, lobeScale: 75, detailAmp: 0.03, detailScale: 22, capScale: 85,
+      heightPerRadius: 0.4, heightVariety: [[-1, 0.4], [0, 0.9], [1, 1.4]], capCurve: [[-1, 0.3], [-0.2, 0.45], [0.2, 0.8], [0.6, 1.1], [1, 1.1]],
+      variants: [
       [0.12, 125, 70, -10, 45], [0.12, 110, 55, 20, 30], [0.10, 100, 80, 0, 60], [0.10, 90, 45, -25, 22], [0.08, 75, 50, 10, 14]] },
-    small: { grid: 130, jitter: 0.4, maxDistance: 80, fadeStart: 350, fadeEnd: 900, variants: [
+    small: { islandLike: true, spawnShare: 0.3, spawnRadius: 280, grid: 150, jitter: 0.14, maxDistance: 77, fadeStart: 400, fadeEnd: 1000,
+      fill: 0.5, radiusCurve: [[-1, 14], [0, 22], [1, 36]], farShrink: 0.8,
+      lobeAmp: 0.45, lobeScale: 28, detailAmp: 0.03, detailScale: 9, capScale: 32,
+      heightPerRadius: 0.45, heightVariety: [[-1, 0.3], [0.3, 0.9], [0.85, 1.3], [0.93, 3.5], [1, 4.5]], capCurve: [[-1, 0.3], [-0.2, 0.45], [0.2, 0.8], [0.6, 1.1], [1, 1.1]],
+      variants: [
       [0.10, 60, 30, 15, 25], [0.09, 50, 35, -20, 12], [0.08, 45, 22, 0, 35], [0.06, 25, 18, 25, 55],
       [0.09, 55, 28, -10, 5], [0.07, 35, 20, 10, 8], [0.06, 20, 14, 0, 4]] }
   }

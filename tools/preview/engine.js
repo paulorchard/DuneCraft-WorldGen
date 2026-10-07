@@ -81,7 +81,7 @@ function evalNode(n, c) {
     case 'PositionsCellNoise': {
       const r = nearest(n.Positions, c.x, c.z, n.MaxDistance), rt = n.ReturnType;
       if (rt.Type === 'Curve') return cached(rt, 'f', () => curveFn(rt.Curve))(r.d);
-      if (rt.Type === 'Distance') return r.d;
+      if (rt.Type === 'Distance') return r.p ? r.d / n.MaxDistance * 2 - 1 : 1; // the game normalises to -1..1, and 1 when there is no point
       if (rt.Type === 'CellValue') { if (!r.p) return rt.DefaultValue; return evalNode(rt.Density, { x: r.p[0], y: 0, z: r.p[1] }); }
       if (rt.Type === 'Density') { if (!r.p) return rt.DefaultValue; const v = evalNode(rt.ChoiceDensity, { x: r.p[0], y: 0, z: r.p[1] });
         for (const d of rt.Delimiters) if (v >= d.From && v < d.To) return evalNode(d.Density, Object.assign({}, c, { anchor: r.p })); return rt.DefaultValue; }

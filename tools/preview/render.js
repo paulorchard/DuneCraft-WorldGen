@@ -8,7 +8,8 @@ const suffix = process.argv[7] || '';
 const P = JSON.parse(JSON.stringify(PARAMS));
 P.previewIslandAt = (process.env.ISLAND || '900,900').split(',').map(Number);
 if (process.argv[8]) Object.assign(P.island, JSON.parse(process.argv[8]));
-if (process.argv[9]) Object.assign(P.outcrops, JSON.parse(process.argv[9]));
+if (process.argv[9]) Object.assign(P.outcrops.medium, JSON.parse(process.argv[9]));
+if (process.argv[10]) Object.assign(P.outcrops.small, JSON.parse(process.argv[10]));
 const g = makeRock(P);
 if (suffix) { const reseed = n => { if (n && typeof n === 'object') { if (typeof n.Seed === 'string' && n.Seed !== 'A') n.Seed += suffix; Object.values(n).forEach(reseed); } }; reseed(g.A); }
 
