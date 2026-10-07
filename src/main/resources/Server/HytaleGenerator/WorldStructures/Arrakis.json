@@ -1,0 +1,44 @@
+{
+  "Type": "NoiseRange",
+  "Biomes": [],
+  "DefaultBiome": "Arrakis_Terrain",
+  "MaxBiomeEdgeDistance": 32,
+  "DefaultTransitionDistance": 32,
+  "Density": {
+    "Type": "Constant",
+    "Value": 0
+  },
+  "Framework": [
+    {
+      "Type": "DecimalConstants",
+      "Entries": [
+        {
+          "Name": "Base",
+          "Value": 80
+        },
+        {
+          "Name": "Water",
+          "Value": 80
+        },
+        {
+          "Name": "Bedrock",
+          "Value": 0
+        }
+      ]
+    },
+    {
+      "Type": "Positions",
+      "Entries": [
+        {
+          "Name": "Spawns",
+          "Positions": {
+            "Type": "List",
+            "Positions": [
+              { "X": 0.5, "Y": 95, "Z": 0.5 }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

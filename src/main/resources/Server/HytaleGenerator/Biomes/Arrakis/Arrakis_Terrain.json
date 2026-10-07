@@ -1,0 +1,123 @@
+{
+  "Name": "Arrakis_Terrain",
+
+  "Terrain": {
+    "Type": "DAOTerrain",
+    "Density": {
+      "Type": "Max",
+      "Skip": false,
+      "Inputs": [
+
+        {
+          "Type": "CurveMapper",
+          "Skip": false,
+          "Curve": {
+            "Type": "Manual",
+            "Points": [
+              { "In": -5, "Out":  2.0 },
+              { "In":  5, "Out": -2.0 }
+            ]
+          },
+          "Inputs": [
+            {
+              "Type": "BaseHeight",
+              "BaseHeightName": "Base",
+              "Distance": true,
+              "Skip": false
+            }
+          ]
+        },
+
+        {
+          "Type": "Sum",
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "Clamp",
+              "WallA": -1.0,
+              "WallB": 0.8,
+              "Skip": false,
+              "Inputs": [
+                {
+                  "Type": "SimplexNoise2D",
+                  "Scale": 400,
+                  "Octaves": 4,
+                  "Lacunarity": 2.0,
+                  "Persistence": 0.5,
+                  "Seed": "A",
+                  "Skip": false
+                }
+              ]
+            },
+            {
+              "Type": "CurveMapper",
+              "Skip": false,
+              "Curve": {
+                "Type": "Manual",
+                "Points": [
+                  { "In":  0, "Out":  0.2 },
+                  { "In": 80, "Out": -1.8 }
+                ]
+              },
+              "Inputs": [
+                {
+                  "Type": "BaseHeight",
+                  "BaseHeightName": "Base",
+                  "Distance": true,
+                  "Skip": false
+                }
+              ]
+            }
+          ]
+        }
+
+      ]
+    }
+  },
+
+  "MaterialProvider": {
+    "Type": "Solidity",
+    "Solid": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "SimpleHorizontal",
+          "TopY": 1,
+          "TopBaseHeight": "Bedrock",
+          "BottomY": 0,
+          "BottomBaseHeight": "Bedrock",
+          "Material": {
+            "Type": "Constant",
+            "Material": {
+              "Solid": "Rock_Bedrock"
+            }
+          }
+        },
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Soil_Sand_White"
+          }
+        }
+      ]
+    },
+    "Empty": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Empty"
+          }
+        }
+      ]
+    }
+  },
+
+  "EnvironmentProvider": {
+    "Type": "Constant",
+    "Environment": "Env_Arrakis"
+  },
+
+  "Props": []
+}

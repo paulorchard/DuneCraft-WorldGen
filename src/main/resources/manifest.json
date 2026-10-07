@@ -1,0 +1,19 @@
+{
+  "Group": "Arrakis",
+  "Name": "Arrakis",
+  "Version": "0.1.0",
+  "Description": "A Dune-inspired world: a planet-wide ocean of sand with rock islands and continents rising from it.",
+  "Authors": [
+    {
+      "Name": "paulo"
+    }
+  ],
+  "ServerVersion": "*",
+  "Main": "com.paulorchard.arrakis.ArrakisPlugin",
+  "Dependencies": {
+    "Hytale:HytaleGenerator": "*"
+  },
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true
+}
