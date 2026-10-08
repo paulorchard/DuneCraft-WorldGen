@@ -20,6 +20,7 @@ fs.writeFileSync(file, JSON.stringify(biome, null, 2) + '\n');
 const wsFile = path.join(path.dirname(file), '..', '..', 'WorldStructures', 'Arrakis.json');
 const ws = JSON.parse(fs.readFileSync(wsFile, 'utf8'));
 const base = ws.Framework.find(f => f.Type === 'DecimalConstants').Entries.find(e => e.Name === 'Base').Value;
+if (PARAMS.sandLevel !== undefined && base !== PARAMS.sandLevel) throw new Error('PARAMS.sandLevel (' + PARAMS.sandLevel + ') must equal Base (' + base + ')');
 const spawns = ws.Framework.find(f => f.Type === 'Positions').Entries.find(e => e.Name === 'Spawns');
 spawns.Positions.Positions = [{ X: 0.5, Y: base + PARAMS.start.padHeight + 1, Z: 0.5 }];
 // The generator takes spawn points from the top-level SpawnPositions key; without it players appear at its fallback (0, 140, 0).

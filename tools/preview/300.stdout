@@ -1,0 +1,21 @@
+C:\Apps\DuneCraft\01 WorldGen\DuneCraft-WorldGen\tools\preview\RealPreview.java:226: warning: [removal] objectFieldOffset(Field) in Unsafe has been deprecated and marked for removal
+        unsafe.putObject(server, unsafe.objectFieldOffset(bus), new EventBus(false));
+                                       ^
+C:\Apps\DuneCraft\01 WorldGen\DuneCraft-WorldGen\tools\preview\RealPreview.java:226: warning: [removal] putObject(Object,long,Object) in Unsafe has been deprecated and marked for removal
+        unsafe.putObject(server, unsafe.objectFieldOffset(bus), new EventBus(false));
+              ^
+C:\Apps\DuneCraft\01 WorldGen\DuneCraft-WorldGen\tools\preview\RealPreview.java:228: warning: [removal] staticFieldBase(Field) in Unsafe has been deprecated and marked for removal
+        unsafe.putObject(unsafe.staticFieldBase(instance), unsafe.staticFieldOffset(instance), server);
+                               ^
+C:\Apps\DuneCraft\01 WorldGen\DuneCraft-WorldGen\tools\preview\RealPreview.java:228: warning: [removal] staticFieldOffset(Field) in Unsafe has been deprecated and marked for removal
+        unsafe.putObject(unsafe.staticFieldBase(instance), unsafe.staticFieldOffset(instance), server);
+                                                                 ^
+C:\Apps\DuneCraft\01 WorldGen\DuneCraft-WorldGen\tools\preview\RealPreview.java:228: warning: [removal] putObject(Object,long,Object) in Unsafe has been deprecated and marked for removal
+        unsafe.putObject(unsafe.staticFieldBase(instance), unsafe.staticFieldOffset(instance), server);
+              ^
+5 warnings
+Exception in thread "main" java.lang.NumberFormatException: For input string: "out/v3_wide.png"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Long.parseLong(Long.java:594)
+	at java.base/java.lang.Long.parseLong(Long.java:698)
+	at RealPreview.main(RealPreview.java:41)

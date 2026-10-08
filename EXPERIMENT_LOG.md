@@ -407,6 +407,364 @@ Two fixes made on top of that state (world "Arrakis V1", log clean, no `Took too
 - Materials: the upper rock block is `Rock_Sandstone` again instead of `Rock_Sandstone_White`. The sand-level rule is otherwise unchanged (`Rock_Sandstone` from 3 blocks below Base upwards, `Rock_Sandstone_Red` deeper).
 - Spawn bug: players were appearing at (0, 140, 0), 50 blocks above the landing pad, and had been since round 5. Cause: the generator takes spawn points from a top-level `SpawnPositions` key in the world structure (vanilla: `"SpawnPositions": { "Type": "Imported", "Name": "Spawns" }`). Ours only had the framework `Positions` entry named "Spawns", which nothing reads on its own. With no spawn positions, `Handle.getSpawnPoints` falls back to a hard-coded (0, 140, 0); the server log shows "joined world 'default' at location (0, 140, 0)". Fix: added `"SpawnPositions": { "Type": "List", "Positions": [{ "X": 0.5, "Y": 91, "Z": 0.5 }] }` inline (not imported, because vanilla also exports the name "Spawns"). `write.js` now writes it too. Not yet confirmed in game.
 
+Confirmed in game: world "Arrakis v2" log shows the player joining at (0.5, 91, 0.5). Log clean.
+
+# Vanilla recipe showcase
+
+Why: our rock is a height field pushed through a stair-step curve (about 470 nodes). Hytale's own World Gen V2 terrain biomes are 45-150 nodes and work differently. Before building more, look at theirs in game, in sandstone. The real Arrakis biome and world structure are untouched in this round.
+
+## How the vanilla biomes build terrain
+
+All of them are true 3D densities: a vertical gradient (a `CurveMapper` on `BaseHeight` distance, positive low down, negative high up) summed with noise, so the surface is wherever the sum crosses zero. None is a height field through a curve. Most end with the same wrapper: `Mix(terrain, "solid below Base", gate on height)`, which forces solid ground below Base and open air above a ceiling.
+
+Node counts are for the terrain density only.
+
+| Biome | Nodes | Main ingredients | Cliffs | Ledges | Meets neighbours by |
+| --- | --- | --- | --- | --- | --- |
+| Plains1_Mountains | 76 | Height gradient + base noise (scale 200) + texture noise (scale 50). `Max(peaks, hills)`. | A second, steeper formula (`Max` of two sums) is `Min`-ed in, and a "cliff mixer" noise (scale 150) blends between that and a constant 1 (no effect). So cliffs come in patches. | A sawtooth `CurveMapper` on (noise scale 350 + height ramp), added at +/-0.075. They wander with the noise. | `DistanceToBiomeEdge` curve 0 -> -0.75, 64 -> 0 added to the sum: height drops towards the border. |
+| Taiga1_Mountains | 73 | Height gradient + base noise (scale 400) + 2D cell noise "boulders". Evaluated through `YSampled` (sample every 8 blocks vertically, interpolate). | 3D cell noise (two rotated `CellNoise3D`) multiplied in as a cliff texture: craggy, fractured faces. | None as such; the cell-noise texture gives blocky breaks. | Cliff texture switched off within about 20 m of the border. |
+| Experimental/Mountains | 75 | Height gradient + squared noise (scale 500). | Slope-aware: `Angle` of the `DensityGradient` of the base terrain (steepness in degrees), normalised 30-70 degrees, mixes in the ledge and cell-noise detail only where the ground is steep. | Sawtooth curve on (height + noise scale 700), 10 teeth, limited by a Manhattan cell noise. | Nothing: no border fade at all. |
+| Experimental/Plateaus | 75 | Several stacked "top noise + height gradient" layers combined with `Min`/`Max`: flat tops at a few levels. | Driven by `DistanceToBiomeEdge` (curve 0 -> -1, 48 -> 1): the mesa wall IS the biome border. | Stacked levels from the separate layers. | The cliff itself. |
+| Experimental/Taiga1_Redwood_2dCliffs | 77 | Base noise (scale 500) + 2D cell noise + height gradient. | A banded texture: four copies of one height curve at different offsets, picked by `MultiMix` with a noise, applied only where a `Gradient` (slope) node says the ground is steep. | The height bands of that curve. Fixed heights, like our rejected undercuts. | No border term. |
+| Plains1_Gorges | 152 | Many `PositionsCellNoise` (`Distance2Div`) layers with `AmplitudeConstant`: a network of cracks between rounded blocks. Not read in full detail. | The crack walls. | Not identified. | Not checked. |
+| Experimental/Dunes | 65 | Two dune fields (noise scale 600 + 200) with a slip-face term from a stretched noise applied where a `Gradient` node finds steep ground. Heights are measured from `Bedrock` (100-180), i.e. it assumes Base = 100. | Slip faces only. | None. | None. |
+| Experimental/Arches | 49 | 5 m cell lattice (`CellValue`) + noise; reads a "World-Continent-Map" export that no shipped asset provides, so it is a constant 0 in practice. | n/a | n/a | n/a. In the preview it is a low maze-like texture, not arches. |
+| Generative/Generative_Arches | 43 | Anchored shapes on a regular 30 m and 60 m grid with 3D noise, `SmoothMin`. | n/a | n/a | n/a. Small repeated objects on a grid. |
+| Generative/Generaitve_Boulders_Sandstone | 43 | Anchored `Distance` + tilted `Cuboid` + 3D noise on a regular 60 m grid, at absolute heights (Y 100 and 125). | n/a | n/a | n/a. Identical boulders in rows: a test pattern. |
+| Desert1_Stacks | 73 | Dunes plus rock stacks from `PositionsCellNoise` with a `Curve` return. | Stack sides, via the distance curve. | 3D noise texture. | Stack positions filtered by `DistanceToBiomeEdge`. |
+| Desert1_Rocky | 331 | The big one: cliffs, boulders, twists (`PositionsTwist`), many cell-noise layers. | Several mechanisms. | Several. | Biome interpolation section. Not read in full. |
+
+Corrections to the brief's reading of Plains1_Mountains:
+
+- "True 3D density, vertical gradient plus 2D noise": correct.
+- "Ledges from a sawtooth `CurveMapper` on noise plus height at small strength": correct. The curve alternates +1/-1 about every 0.2 of input, and the result is scaled to +/-0.075.
+- "A cliff mixer noise blends between a cliffy and a smooth version": nearly. The mixer blends between a cliff-limiting term and a constant 1, and the result is `Min`-ed with the smooth terrain. Where the mixer is high the limit is 1 and does nothing; where it is low the steeper formula cuts in. Same effect: cliffs in patches.
+- "Fades at its border with `DistanceToBiomeEdge`": correct, over 64 m in the curve. But the vanilla zone world structures set `MaxBiomeEdgeDistance` to 32, so only the first half of that curve is ever reached.
+- "Caves are one `Min` against an imported cave density": correct (`Plains1_Caves_Terrain`).
+- Node count: 76 for the terrain, about 110 with materials. Not 60, but far below our 470.
+
+## Showcase world
+
+- World structure `Arrakis_Showcase` (`NoiseRange`). Its biome map is `CurveMapper(XValue) + CurveMapper(ZValue)`: a column index from X plus 10 x a row index from Z inside each 500 m square, a large negative number in the 200 m gaps. Each biome owns a range of width 1 around its value; the gaps fall through to the default biome `AS_Flat` (flat sand). Base 100 (the vanilla value these recipes assume), spawn (0.5, 102, 0.5), `MaxBiomeEdgeDistance` 32 and `DefaultTransitionDistance` 32 as in the vanilla zones.
+- Biomes `AS_*` in `Biomes/Arrakis_Showcase/`, generated by `tools/showcase/build.js` from an extracted copy of the game's assets. Terrain densities are copied unchanged except:
+  - every `ExportAs` name and the imports that refer to it get an `AS_` prefix, because export names are global across packs;
+  - the "World-Continent-Map" import in Arches is replaced by the constant 0 it already resolves to;
+  - node-editor metadata is dropped.
+  `Plains1_Caves_Terrain` is still imported from the game, so the five biomes that use it keep their caves.
+- Skin: all solid blocks `Rock_Sandstone` over a bedrock layer; Dunes and the flat filler are `Soil_Sand_White`. No soil-on-rock distinction was attempted: the vanilla material providers were dropped whole. No props, tint or creatures; environment `Env_Arrakis`.
+
+Layout (east is +X, north is -Z; spawn at the origin on flat sand between Gorges and Dunes):
+
+| | x -1050 (far west) | x -350 (west) | x +350 (east) | x +1050 (far east) |
+| --- | --- | --- | --- | --- |
+| z -700 (north) | Plains1_Mountains | Taiga1_Mountains | Experimental Mountains | Plateaus |
+| z 0 | Taiga1_Redwood_2dCliffs | Plains1_Gorges | Dunes | Arches |
+| z +700 (south) | Generative_Arches | Boulders_Sandstone | Desert1_Stacks | Desert1_Rocky |
+
+How to create it: make a new world in the game with the Arrakis mod on, exit to the main menu, run `tools\showcase\Use-Showcase.ps1 -WorldName "<name>"`, load the world. The script adds `"WorldStructure": "Arrakis_Showcase"` to the world's `WorldGen` (our provider already reads it), deletes the chunks already generated and the saved player positions.
+
+Checks:
+
+- Real Arrakis: `Arrakis_Terrain.json` and `WorldStructures/Arrakis.json` are unchanged (no diff).
+- All 13 showcase biomes and the world structure load through the game's asset codecs with no failures, and each of the 12 terrain densities builds and renders in the real-generator preview (`tools/showcase/showcase-preview.png`, each tile 500 m, previewed as if deep inside the biome). The preview can now render any biome: `BIOME=<id> WS=<structure> EXTRA_DENSITY=<game Density folder> NO_WRITE=1 tools/preview/real.sh <seed> out.png 0 0 500 1.25`.
+- Not checked outside the game: the biome map itself, the borders between squares, and the log. The preview builds one biome at a time and does not run the biome-map and biome-distance stages.
+
+Expect in game: square outlines. Plateaus in particular draws its cliff along the biome border, so it will be a square mesa. Mountain squares will slope down to their edges over about 32 m.
+
+## Options for using a vanilla recipe on Arrakis (part 3, for after the look)
+
+A. Rock and sand as separate biomes, our placement as the biome map.
+- The world structure's `Density` is an ordinary density, so the island and outcrop footprint field could be the map: rock biome where it is positive, sand biome elsewhere. The starting outcrop and guaranteed island would move into that map.
+- Gain: vanilla recipes drop in unchanged, including their `DistanceToBiomeEdge` edge behaviour, and rock and sand get separate, simple material providers.
+- Risk, not verified: how the engine blends terrain across a border (`DefaultTransitionDistance` 32) and how it measures `DistanceToBiomeEdge` were not read from the jar. Vanilla mountains fade over 32-64 m from the border, so a rock body 40 m across would be all border and never reach its height. Small outcrops probably cannot be biomes of their own.
+- Cost: dunes, the dune fade at spawn, the landing pad and the "rock heights measured from the sand" trick all currently live in one density and would have to be split across two biomes. The sand-level material rule stays easy (it only needs Y).
+
+B. Keep one biome; transplant only the vanilla mountain density in place of the terraced height field.
+- Keep everything that works: sand floor, dunes, positions, fade, pad, spawn, material rule on the exported rock density.
+- Replace `terraced(height)` with the vanilla 3D formula, and feed it our own footprint field wherever the vanilla recipe uses `DistanceToBiomeEdge` (ours is already "how far inside the body", per body, at any size).
+- Gain: works for bodies of any size including 40 m outcrops; no dependence on unverified biome-border behaviour.
+- Cost: the rock is no longer a height per column, so "rock top per column" tricks (the round 3 root cut, the pad blend) need restating for a 3D density. Heights have to be rescaled per body, since vanilla mountains assume one fixed height range.
+
+C. Hybrid: large islands as a biome (A), outcrops and the starting outcrop inside the sand biome as now (B-style or current). More moving parts; only worth it if A's border behaviour turns out to look much better than a transplanted formula.
+
+Recommendation before seeing it in game: B, because isolated bodies down to 40 m are the core of this world and A's border blending is the unverified part. Worth reading the biome-distance stage in the jar before deciding.
+
+## Showcase feedback (world "Arrakis shocse")
+
+Loaded cleanly on `Arrakis_Showcase`: no `Took too long`, no load failures, spawn (0.5, 102, 0.5), 13.5 ms per chunk over 1000 chunks. One warning from our files, inherited from vanilla: "Duplicate export name for asset: AS_Plains1-Gorges-BaseTerrain" (the vanilla Gorges file uses that export name twice).
+
+Numbering agreed: #1 at the north-west corner, counting east along each row, then down. So #1 Plains1_Mountains, #2 Taiga1_Mountains, #3 Experimental Mountains, #4 Plateaus, #5 Redwood_2dCliffs, #6 Plains1_Gorges, #7 Dunes, #8 Arches, #9 Generative_Arches, #10 Boulders_Sandstone, #11 Desert1_Stacks, #12 Desert1_Rocky.
+
+Picks and why:
+
+- #1 Plains1_Mountains: the sharp jagged mountains that protrude.
+- #3 Experimental Mountains: the crevices and caves.
+- #5 Redwood_2dCliffs: the carved look of the cliff faces.
+- #6 Plains1_Gorges: the deep canyons.
+
+Direction: give each generated island its own recipe, chosen at random from mixes of these four.
+
+# Mixed-island showcase
+
+Status: deployed, all twelve islands rendered with the real-generator preview (`tools/showcase/mix-preview.png`). Not yet seen in game.
+
+World structure `Arrakis_Mix`, biomes `AM_*` in `Biomes/Arrakis_Mix/`, generated by `tools/showcase/build-mix.js`. Each biome is a 1100 m tile of flat sand with one island at its centre. Base 100, spawn (0.5, 102, 0.5).
+
+## How an island is built
+
+- Footprint field `F`: the Arrakis large-island recipe with the same numbers (radial falloff 0 at 300 m, lobe noise scale 230 +/-0.62, detail scale 60 +/-0.05), centred on the tile with a `List` position, different noise seeds per island.
+- Vanilla terrain: the root density of each chosen biome is copied unchanged, with two substitutions: export names get a per-copy prefix, and every `DistanceToBiomeEdge` node is replaced by `Clamp(0, 2000)[300 * F]`, roughly metres inside the shore. That is the option B transplant from the section above: the recipe thinks the island shore is its biome border.
+- Merge, when an island has more than one recipe: by patches. `Mix(A, B, mask)`, mask from a `SimplexNoise2D` scale 240 through a curve that gives each recipe a similar share with a blend zone 0.6 of noise range wide. Three or four recipes are chained.
+- Island limit: `rock = Min(merged, coast, footprint)`.
+  - coast: `3.9 * F` plus a height term falling 0.01 per metre, i.e. rock may rise 1.3 m per metre in from the shore.
+  - footprint: -5 where `F < -0.012`, +5 from -0.01, so nothing exists outside the footprint at any depth and the root goes straight down.
+- Terrain: `Max(flat sand floor at Base, rock)`. No dunes in this showcase.
+- Material: the sand-level rule on the exported rock density (`Rock_Sandstone` from 3 blocks below Base up, `Rock_Sandstone_Red` deeper), sand elsewhere.
+
+## Layout (east is +X, north is -Z; island centres)
+
+| | x -1650 | x -550 | x +550 | x +1650 |
+| --- | --- | --- | --- | --- |
+| z -1100 | M1: recipe 1 | M2: recipe 3 | M3: recipe 5 | M4: recipe 6 |
+| z 0 | M5: 1 + 3 | M6: 1 + 5 | M7: 1 + 6 | M8: 3 + 5 |
+| z +1100 | M9: 3 + 6 | M10: 5 + 6 | M11: 1 + 3 + 5 | M12: 1 + 3 + 5 + 6 |
+
+Node counts for the rock density: single recipes 108-185, pairs 188-306, the four-way mix 464.
+
+## Seen in the preview
+
+- All twelve build and come out island-sized with the Arrakis outline character.
+- Recipe 5 (2dCliffs) leaves large sand holes and a few straight edges where its own ground sits at or below Base; islands with a lot of it (M3, M8) are thin and broken up.
+- Recipe 6 (Gorges) gives the densest, most solid islands, cracked all over.
+- Recipes 1 and 3 give lobed mountains with a few sand gaps.
+- First attempt at the merge used a blend zone 0.24 of noise range wide and showed hard seam lines between patches; widened to 0.6.
+
+## Known limits
+
+- Caves from the vanilla cave density that fall below Base inside an island fill with sand, because the sand floor is solid there (the "cave air must win over sand inside rock" problem from the set-aside round 6).
+- The four recipes use different density scales (their final multipliers are 2, 0.2, 0.5 and 1), so in a blend zone the surface leans towards the larger-scale recipe.
+- Heights are whatever the vanilla recipe gives (up to about 150-200 m above Base); nothing ties height to island size yet.
+- Preview is of one biome at a time; tile borders and the log are untested until a load.
+
+How to create it: `tools\showcase\Use-Showcase.ps1 -WorldName "<name>" -WorldStructure Arrakis_Mix` on a fresh world.
+
+## Mixed-island showcase, first load (world "Arrakis shocse" on Arrakis_Mix)
+
+- Loaded: no Took too long, no load failures, no unused keys. Five "Duplicate export name" warnings, one per copy of the Gorges recipe (AM4a, AM7b, AM9b, AM10b, AM12d), inherited from the vanilla file.
+- Generation time: 25.5-31.3 ms per chunk in the 100-, 500- and 1000-chunk reports (27.3 ms at 1000). That is about twice the Arrakis world (13.5-15 ms). The first chunk took 250 ms.
+- An exception at shutdown ("World thread is not accepting tasks") appears after the client disconnected; it is from the world closing, not from generation.
+- Feedback: the peaks are great, but too much of each island is above ground. Lower the rock 20 blocks, so the sand ocean is in effect 20 blocks higher on it.
+
+Change: the merged vanilla terrain is wrapped in `Slider` with `SlideY` -20 (`SINK` in `build-mix.js`). `Slider` evaluates its input at position minus the slide, so the terrain is read 20 blocks higher up and the whole shape moves down 20. The coast limit, footprint, sand floor and material rule are not shifted: sand level stays at Base.
+
+Heights after lowering (real-generator preview, sand level Y 100):
+
+| Island | Highest top block | Average rock top |
+| --- | --- | --- |
+| M1 (#1) | Y 200 | Y 137 |
+| M2 (#3) | Y 189 | Y 126 |
+| M3 (#5) | Y 130 | Y 112 |
+| M4 (#6) | Y 140 | Y 116 |
+| M5 (#1 + #3) | Y 225 | Y 136 |
+| M6 (#1 + #5) | Y 207 | Y 130 |
+| M7 (#1 + #6) | Y 196 | Y 126 |
+| M8 (#3 + #5) | Y 234 | Y 122 |
+| M9 (#3 + #6) | Y 205 | Y 123 |
+| M10 (#5 + #6) | Y 141 | Y 114 |
+| M11 (#1 + #3 + #5) | Y 205 | Y 132 |
+| M12 (all four) | Y 198 | Y 125 |
+
+Heights before lowering were not recorded. Deployed; the world's chunks were cleared again.
+
+## Mixed-island showcase, second pass: three sizes and the root rule
+
+Feedback on the lowered islands: all twelve are right for large islands and should each be a possible variant; #12 (M12) has floating clusters of blocks above the main body. Next: scale the variants down for medium and small islands by lowering them further (another 20 blocks for medium, another 10 for small) and keeping what stays above the sand. And the standing rule again: once rock is below the sand surface it must fall away steeply to bedrock, so islands and their caves are not joined under the sand.
+
+Status: deployed, rendered with the real-generator preview (seed 4242), not yet seen in game.
+
+Each tile (1500 x 1100 m) now shows one variant as six shapes, all from the same recipe:
+
+| Size | Lowered by | Footprint radius | Offset from tile centre |
+| --- | --- | --- | --- |
+| Large | 20 blocks | 300 m | (-300, 0) |
+| Medium | 40 | 90 m and 60 m | (380, -230) and (400, 200) |
+| Small | 50 | 36, 25 and 18 m | (610, -330), (630, -20), (600, 340) |
+
+Tile centres: x -2250, -750, 750, 2250; z -1100, 0, 1100. Same variant order as before (M1-M4 single recipes #1 #3 #5 #6; M5 1+3, M6 1+5, M7 1+6, M8 3+5; M9 3+6, M10 5+6, M11 1+3+5, M12 all four). Spawn (0.5, 102, 550.5).
+
+How it is built:
+
+- The variant's recipe is exported once per tile with `SingleInstance: false`; each use is `Slider(SlideY = -sink)[Imported recipe]`, so the three size classes are the same recipe read 20, 40 or 50 blocks higher up.
+- Each size class is `Mix(-5, body, inside-footprint)`. `Mix` evaluates only its first input where the influence is 0, so the recipe is not evaluated outside the footprints.
+- `body = Min(lowered recipe, coast, root)`.
+  - coast: rock may rise 1.3 m per metre in from the shore of its own footprint.
+  - root: `CurveMapper( YOverride(Base - 4)[ Cache[ lowered recipe ] ] )`, -5 where that is not positive, +5 where it is. A column keeps rock, at every depth, only if the recipe is solid 4 blocks below sand level there. So every mass that breaks the sand has its own vertical-sided root and nothing joins up underneath.
+- Biome-edge substitute: the recipes are told how far inside their shape a column is on the scale of a full-size island (`300 * F` for every shape, whatever its radius).
+
+Measurements (1400 m view per tile, 3.5 m columns):
+
+| Tile | Rock above the sand | Rock at Y = 40 | Rock at Y = 10 |
+| --- | --- | --- | --- |
+| M1 | 30.3 ha | 0.94 x | 1.01 x |
+| M2 | 14.6 ha | 0.87 x | 1.05 x |
+| M3 | 11.0 ha | 1.12 x | 1.12 x |
+| M4 | 25.5 ha | 0.97 x | 1.09 x |
+| M5 | 25.5 ha | 0.89 x | 1.03 x |
+| M6 | 21.9 ha | 0.99 x | 1.02 x |
+| M7 | 29.1 ha | 0.92 x | 1.04 x |
+| M8 | 13.1 ha | 1.06 x | 1.07 x |
+| M9 | 23.4 ha | 0.93 x | 1.06 x |
+| M10 | 18.7 ha | 0.97 x | 1.11 x |
+| M11 | 21.6 ha | 0.92 x | 1.04 x |
+| M12 | 21.7 ha | 0.98 x | 1.06 x |
+
+Underground area never exceeds 1.12 x what shows above the sand. Values under 1 at Y = 40 are the recipes' own caves.
+
+Floating rock on the large island of each variant (new `FLOAT=1` mode: 2 m voxels from 4 below sand level up, flood fill from the lowest layer; pieces joined only diagonally count as floating, so this overstates):
+
+| Variant | Pieces | Total | Biggest |
+| --- | --- | --- | --- |
+| M1 (#1) | 1 | 8 m3 | 8 m3 |
+| M2 (#3) | 1 | 8 | 8 |
+| M3 (#5) | 3 | 24 | 8 |
+| M4 (#6) | 11 | 152 | 40 |
+| M5 (1+3) | 14 | 168 | 24 |
+| M6 (1+5) | 7 | 72 | 24 |
+| M7 (1+6) | 14 | 1224 | 712 |
+| M8 (3+5) | 6 | 48 | 8 |
+| M9 (3+6) | 16 | 616 | 424 |
+| M10 (5+6) | 13 | 200 | 72 |
+| M11 (1+3+5) | 9 | 304 | 152 |
+| M12 (all four) | 8 | 112 | 40 |
+
+So floating rock is not special to M12. Single recipes #1, #3 and #5 are nearly clean; every merge and anything containing #6 (Gorges) produces some, and on this seed the worst are 1+6 and 3+6. It depends on the seed. Nothing has been done about it yet: a density cannot test whether a piece is attached, so it has to be prevented at the source (the patch blend between recipes of different scale is the likely culprit for merges; Gorges makes some on its own).
+
+What did not work:
+
+- Feeding the recipes real metres inside a small footprint (`radius * F`): their own border fade over 32-64 m flattened the medium outcrops to a few fragments and the small ones to nothing. Scaling every shape as a full-size island fixed that.
+
+What the preview shows: large islands as before; medium footprints give one or two masses of 40-100 m; small footprints give a rock of 15-40 m or sometimes nothing. Outcrop peaks are about 45 m above the sand on the 1+3 tile.
+
+Not done: variants are not yet picked at random per island in the real Arrakis world. This is still the showcase.
+
+# Variants in the real Arrakis world
+
+Decisions from the three-size showcase: remove the worst merges for floating rock; empty small outcrops are acceptable; put the variants into the real build and test a world; one of the island types must sit at spawn so players start on rock.
+
+Status: deployed, checked with the real-generator preview on seeds 1791406847363, 42, 7 and 99. Not yet seen in game.
+
+## What changed in Arrakis_Terrain
+
+The terraced height-field rock (rounds 2-5) is replaced. Dunes, the dune fade at spawn, the sand floor, island and outcrop positions and footprints, the chain fade, the guaranteed island and the sand-level material rule are kept. `graph.js` builds the new rock when `PARAMS.variants` is set; `write.js` needs `VANILLA_GEN` pointing at an extracted copy of the game's `Server/HytaleGenerator`.
+
+- Ten variants (1+6 and 3+6 dropped): #1, #3, #5, #6, 1+3, 1+5, 3+5, 5+6, 1+3+5, 1+3+5+6. Each is exported once as `ArrakisV<n>`, not single-instance.
+- Pick: one white-noise value per large island (`CellValue` on the island positions, exported as `Arrakis_Pick`, cached per column). Medium and small outcrops read the same value, so a chain uses its island's variant. The starting island has its own pick from the origin (`Arrakis_Pick_Start`).
+- Only the picked variant is evaluated: `Max` over `Mix(-5, Slider(-sink)[variant], pick-is-this-one)`; `Mix` skips its second input when the influence is 0.
+- Size classes, each `Mix(-5, Min(picked variant, coast, root), inside-footprint)`:
+
+| Class | Footprint | Lowered by |
+| --- | --- | --- |
+| Large island | island field, 300 m nominal radius | 20 blocks |
+| Medium outcrop | medium layer field (radius 50-97 m per cell) | 40 |
+| Small outcrop | small layer field | 50 |
+| Starting island | radius 100 m at the origin | 30 |
+
+- Coast: about 1.3 m of rise per metre in from the shore (nominal radius per class).
+- Root: a column keeps rock at any depth only if the picked variant is solid 4 blocks below sand level (Base - 4).
+- Biome-edge substitute: `Arrakis_Inside` = 300 x the largest footprint field at that column, exported single-instance and imported at every `DistanceToBiomeEdge` site.
+- Islands and outcrops are cleared within 30 m of the origin.
+- Landing pad: two cones around the origin. Inside 16 m both sit at Base + 10, so the pad is flat and open to the sky; outside, the lower one falls and the upper one rises at 0.6, so the ground next to the pad is walkable either way. The lower cone stops at a vertical edge 35 m out (root rule). Spawn stays (0.5, 91, 0.5).
+
+## Checks (real generator)
+
+- Asset loads and builds; biome file about 2.1 MB, rock graph about 3,200 nodes.
+- Pad: top block Y 90 across the whole 15 m radius on all four seeds. (Round 5's pad measured Y 89; the cone formula lands exactly on zero at Y 90, so the block there is solid. Spawn Y 91 is standing height on it.)
+- Routes: sand reachable from the pad without a step over 1 block in all eight directions on three seeds and in six of eight on the fourth.
+- Underground, 2600 m view round spawn: rock above the sand 38.7 ha, at Y = 40 46.2 ha (1.19 x), at Y = 10 42.1 ha (1.09 x). The Y = 40 figure is above the old 1.15 target; rock hidden under dunes just above sand level and the pad's base count as "not showing".
+- 7 km view (`tools/preview/variants-world-7km.png`): every large-island site has rock, but islands differ a lot in how much. The guaranteed island on that seed is a full, solid island (`variants-main-island.png`); several others are a scatter of fragments.
+
+## Problems found
+
+- Curves: `curve()` in `graph.js` rounds inputs to 5 decimals, so 1e-6 offsets collapsed onto their neighbours and the asset failed validation ("More than one point with Y value"). Use 1e-4.
+- `Distance` is a 3D distance from the world origin. The pad cones and the 30 m clearing are evaluated per voxel, not under a `YOverride`, so at Y 85 the "distance" was already 85 and there was no pad at all. They are now wrapped in `YOverride(0)`.
+- A `String.replace` with a replacement containing `$'` silently mangled the patch (JavaScript replacement pattern). Use a function replacement.
+
+## Known weaknesses going into the game test
+
+- Thin islands: variants built on #5 alone or 5+6 are low (30-40 m in the showcase), so lowered 20 blocks little is left, and their medium and small outcrops are mostly empty. About three of the ten variants give weak islands.
+- The pad sits in a round bowl or on a round mound where the variant's ground differs from Base + 10; the cones are visibly conical.
+- Floating rock was reduced by dropping two merges, not eliminated.
+- Caves from the vanilla cave density that fall below sand level inside rock fill with sand.
+- Generation time is unmeasured. The showcase ran at about twice the old Arrakis time, but there every column was inside a tile of recipe; here most of the world is sand and skips the recipes.
+
+## First game test of the variants (world "Arrakis v2 1"): whole world painted sandstone
+
+Report: the whole world was sandstone instead of the white-sand ocean.
+
+Cause: mine, in the integration step. To keep the definition of `Arrakis_Inside` in the tree I added `Multiplier[0, definition]` as a third input of the `Max` that forms `Arrakis_Rock`. That input is a constant 0, so outside every rock body the rock density became `Max(-5, -5, 0) = 0` instead of -5. The terrain shape did not change (0 is not solid), which is why the preview images looked right, but the material rule paints rock wherever the exported rock density is between 0 and 100, and 0 qualifies. Every solid block in the world passed that test, including all the sand. The sand, dunes and material rule themselves were not changed.
+
+Fix: the holder is now added (`Sum(Max(others, start), 0 * definition)`) instead of being a `Max` input, so the density outside rock is -5 again.
+
+New preview check, because the old ones could not see this: `materials:` counts sand-surface columns where the rock density at the surface block is >= 0. Deployed build: 140,359 of 140,359. Fixed build: 0 of 140,359 (seed 42, 1600 m view).
+
+From that world's log: no `Took too long`, no load failures; 21.5 ms per chunk over 1000 chunks (24.3 at 500, 36.6 at 100), against 13.5-15 ms for the old world.
+
+## Second game test of the variants (world "Arakis v3", seed 1791432644696)
+
+Sand ocean confirmed back in the preview for that seed (0 of 618,723 sand columns painted as rock). Log clean; spawn (0.5, 91, 0.5); 21-25 ms per chunk in the 500- and 1000-chunk reports. On that seed the guaranteed island drew a thin variant (a branching ridge). Verdict: thin islands look fine; keep all ten variants.
+
+# Islands by latitude
+
+Request: the spacing between large islands should vary north to south, as in Dune: bigger land in the north, open desert in the south. Answers to my questions:
+
+1. About 10 km north the islands should form east-west ("latitudinal") land; by 20 km north back to the spacing at spawn, giving a belt of land. Going south over 20 km, down to medium islands only, 600-2500 m apart, and it stays like that. (The answer said "0 to 20 km closer, 20 km to 10 km further"; read as: peak at 10 km north, back to normal at 20 km north.)
+2. Far north: dense large islands with sand channels, not solid continents.
+3. Far south: as in 1.
+4. Northern islands bigger and wider east-west.
+5. One rock variant per land mass.
+6. No east-west variation.
+7. Spawn and the guaranteed island stay as they are.
+
+Status: deployed, rendered with the real-generator preview on seed 1791432644696. Not yet seen in game.
+
+## How it is built (north is -Z)
+
+All curves are `CurveMapper(ZValue)` and hold their end values beyond the last point.
+
+- Regular large islands (2500 m grid, 300 m radius): the keep-chance in `Occurrence` is now a curve instead of 0.7: 0.7 at 20 km north, 0.15 at 10 km north, 0.7 from 2.5 km north to spawn, falling to 0 at 20 km south.
+- Belt islands, new: their own `Mesh2D` grid, 4000 m east-west by 1800 m north-south, jitter 0.12, kept with a chance of 0 at 2.5 km north, 0.9 at 10 km north, 0 at 20 km north.
+  - Footprint: `PositionsCellNoise` with a `Density` return type; the choice is the belt strength at the island centre (0 at the belt's edges, 1 at its core) and picks one of four anchored `Ellipsoid` sizes, half-axes east-west x north-south: 500 x 330, 750 x 400, 1050 x 470, 1350 x 520 m.
+  - Plus broad lobes (`SimplexNoise2D` scale 520, +/-0.45), smaller bays (scale 150, +/-0.14) and the usual coast detail. The lobes are what cut sand channels into them.
+- Island field = `Max(regular field, belt field)`. Island positions = `Union(guaranteed, filtered regular grid, belt)`, so chains, the variant pick and the biome-edge substitute all see belt islands.
+- South: the medium outcrop layer's survival shift gets a second term by latitude, so cells fill on their own whatever the island distance: none at spawn, 15% of cells by 20 km south (400 m grid, so of the order of 1 km apart). The small layer has no such term, so with no large islands there are no small outcrops.
+- Variant pick: `Mix(white noise at the medium cell, white noise at the nearest island centre, near-an-island)`, where near-an-island is 1 on a large-island footprint or within 1200 m of an island centre. So a land mass and its chain share one variant, and a free-standing southern medium island picks its own.
+
+## Preview, 10 km views down the centre line
+
+| Centre | Rock share of the view |
+| --- | --- |
+| 20 km north | 2.5% |
+| 15 km north | 8.2% |
+| 10 km north | 12.9% |
+| 5 km north | 7.6% |
+| spawn | 1.9% |
+| 5 km south | 1.5% |
+| 10 km south | 1.1% |
+| 20 km south | 0.2% |
+
+Images: `tools/preview/latitude-series.png` (the eight views) and `latitude-belt-zoom.png` (3.6 km at the belt core: one belt island about 2.7 km by 1 km, laced with sand channels, and one that drew a thin variant and is a scatter of pieces).
+
+Other checks: pad top block Y 90 and sand reachable in all eight directions (unchanged); 0 sand columns painted as rock. Biome file about 2.5 MB.
+
+## Known weaknesses
+
+- First belt grid was 5000 x 2500 m with islands up to 1500 x 550: rows 1.4 km apart and 2 km gaps, more "big islands" than "belt". Tightened to 4000 x 1800 with islands up to 1350 x 520.
+- Underground at the belt core: rock above the sand 169 ha, at Y = 40 240 ha (1.42 x). Well over the 1.15 target. Belt islands have a lot of rock just under dune level that counts as "not showing"; roots are still vertical per mass, but one belt island is one mass.
+- Southern medium islands are small: at 20 km south the view has about 23 ha of rock in total. Medium outcrops are the recipe lowered 40 blocks, and for the lower variants little survives.
+- Outcrop chains are placed 450-1000 m from an island centre, which for a belt island is inside the island, so belt islands have almost no chain round them.
+- Belt islands and regular islands can overlap where both exist; they then have different variants and the rock changes along the line between their centres.
+- Generation time in the belt is unmeasured and will be higher: rock chunks cost about twice sand chunks.
+
 ## Dead ends
 
 - Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).

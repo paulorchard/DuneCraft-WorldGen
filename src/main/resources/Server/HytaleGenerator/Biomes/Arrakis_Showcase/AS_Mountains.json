@@ -1,0 +1,661 @@
+{
+  "Name": "AS_Mountains",
+  "Terrain": {
+    "Type": "DAOTerrain",
+    "Density": {
+      "Type": "Min",
+      "Skip": false,
+      "Inputs": [
+        {
+          "Type": "Mix",
+          "ExportAs": "AS_Plains1_Mountains_Terrain",
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "Multiplier",
+              "Skip": false,
+              "Inputs": [
+                {
+                  "Type": "Sum",
+                  "Skip": false,
+                  "Inputs": [
+                    {
+                      "Type": "Mix",
+                      "Skip": false,
+                      "Inputs": [
+                        {
+                          "Type": "Normalizer",
+                          "Skip": false,
+                          "FromMin": -1,
+                          "FromMax": 1,
+                          "ToMin": -0.0075,
+                          "ToMax": 0.0075,
+                          "Inputs": [
+                            {
+                              "Type": "YOverride",
+                              "Skip": false,
+                              "Value": 0,
+                              "Inputs": [
+                                {
+                                  "Type": "Cache",
+                                  "Skip": false,
+                                  "Capacity": 3,
+                                  "Inputs": [
+                                    {
+                                      "Type": "SimplexNoise2D",
+                                      "Skip": false,
+                                      "Lacunarity": 4,
+                                      "Persistence": 0.1,
+                                      "Octaves": 1,
+                                      "Scale": 20,
+                                      "Seed": "A"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "Sum",
+                          "Skip": false,
+                          "Inputs": [
+                            {
+                              "Type": "Normalizer",
+                              "Skip": false,
+                              "FromMin": -1,
+                              "FromMax": 1,
+                              "ToMin": -0.1,
+                              "ToMax": 0.1,
+                              "Inputs": [
+                                {
+                                  "Type": "YOverride",
+                                  "Skip": false,
+                                  "Value": 0,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Cache",
+                                      "Skip": false,
+                                      "Capacity": 3,
+                                      "Inputs": [
+                                        {
+                                          "Type": "SimplexNoise2D",
+                                          "Skip": false,
+                                          "Lacunarity": 1.2,
+                                          "Persistence": 0.3,
+                                          "Octaves": 2,
+                                          "Scale": 15,
+                                          "Seed": "A"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "Type": "Min",
+                              "Skip": false,
+                              "Inputs": [
+                                {
+                                  "Type": "Normalizer",
+                                  "Skip": false,
+                                  "FromMin": -1,
+                                  "FromMax": 1,
+                                  "ToMin": -0.15,
+                                  "ToMax": 0.4,
+                                  "Inputs": [
+                                    {
+                                      "Type": "CurveMapper",
+                                      "Skip": false,
+                                      "Curve": {
+                                        "Type": "Manual",
+                                        "Points": [
+                                          {
+                                            "In": 1,
+                                            "Out": 0.5
+                                          },
+                                          {
+                                            "In": 0.8,
+                                            "Out": -1
+                                          },
+                                          {
+                                            "In": 0.6,
+                                            "Out": 0.5
+                                          },
+                                          {
+                                            "In": 0.4,
+                                            "Out": -1
+                                          },
+                                          {
+                                            "In": 0.2,
+                                            "Out": 0.5
+                                          },
+                                          {
+                                            "In": 0,
+                                            "Out": -1
+                                          },
+                                          {
+                                            "In": -0.2,
+                                            "Out": 0.5
+                                          },
+                                          {
+                                            "In": -0.4,
+                                            "Out": -1
+                                          },
+                                          {
+                                            "In": -0.6,
+                                            "Out": 0.5
+                                          },
+                                          {
+                                            "In": -0.8,
+                                            "Out": -1
+                                          },
+                                          {
+                                            "In": -1,
+                                            "Out": 0.5
+                                          }
+                                        ]
+                                      },
+                                      "Inputs": [
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "CurveMapper",
+                                              "Skip": false,
+                                              "Curve": {
+                                                "Type": "Manual",
+                                                "Points": [
+                                                  {
+                                                    "In": -50,
+                                                    "Out": 1
+                                                  },
+                                                  {
+                                                    "In": 180,
+                                                    "Out": -1
+                                                  }
+                                                ]
+                                              },
+                                              "Inputs": [
+                                                {
+                                                  "Type": "BaseHeight",
+                                                  "Skip": false,
+                                                  "BaseHeightName": "Base",
+                                                  "Distance": true
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "YOverride",
+                                              "Skip": false,
+                                              "Value": 0,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Cache",
+                                                  "Skip": false,
+                                                  "Capacity": 3,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "SimplexNoise2D",
+                                                      "Skip": false,
+                                                      "Lacunarity": 9,
+                                                      "Persistence": 0.2,
+                                                      "Octaves": 1,
+                                                      "Scale": 700,
+                                                      "Seed": "A"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Type": "Normalizer",
+                                  "Skip": false,
+                                  "FromMin": -1,
+                                  "FromMax": 1,
+                                  "ToMin": -0.6,
+                                  "ToMax": 0.1,
+                                  "Inputs": [
+                                    {
+                                      "Type": "YOverride",
+                                      "Skip": false,
+                                      "Value": 0,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Cache",
+                                          "Skip": false,
+                                          "Capacity": 3,
+                                          "Inputs": [
+                                            {
+                                              "Type": "SmoothMax",
+                                              "Skip": false,
+                                              "Range": 0.2,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Pow",
+                                                  "Skip": false,
+                                                  "Exponent": 0.75,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "PositionsCellNoise",
+                                                      "Skip": false,
+                                                      "MaxDistance": 60,
+                                                      "Positions": {
+                                                        "Type": "Mesh2D",
+                                                        "Skip": false,
+                                                        "PointsY": 0,
+                                                        "PointGenerator": {
+                                                          "Type": "Mesh",
+                                                          "Jitter": 0.4,
+                                                          "ScaleX": 50,
+                                                          "ScaleY": 50,
+                                                          "ScaleZ": 50,
+                                                          "Seed": "A"
+                                                        }
+                                                      },
+                                                      "ReturnType": {
+                                                        "Type": "Distance2Div"
+                                                      },
+                                                      "DistanceFunction": {
+                                                        "Type": "Manhattan"
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "Type": "Constant",
+                                                  "Skip": false,
+                                                  "Value": 0.1
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "Normalizer",
+                          "Skip": false,
+                          "FromMin": 30,
+                          "FromMax": 70,
+                          "ToMin": 0,
+                          "ToMax": 1,
+                          "Inputs": [
+                            {
+                              "Type": "Multiplier",
+                              "Skip": false,
+                              "Inputs": [
+                                {
+                                  "Type": "CurveMapper",
+                                  "Skip": false,
+                                  "Curve": {
+                                    "Type": "Manual",
+                                    "Points": [
+                                      {
+                                        "In": 0.4,
+                                        "Out": 0
+                                      },
+                                      {
+                                        "In": 0.3,
+                                        "Out": 1
+                                      },
+                                      {
+                                        "In": -0.3,
+                                        "Out": 1
+                                      },
+                                      {
+                                        "In": -0.4,
+                                        "Out": 0
+                                      }
+                                    ]
+                                  },
+                                  "Inputs": [
+                                    {
+                                      "Type": "Imported",
+                                      "Skip": false,
+                                      "Name": "AS_Plains1_Mountains_Base_Terrain"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Type": "Max",
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Angle",
+                                      "Skip": false,
+                                      "IsAxis": true,
+                                      "Vector": {
+                                        "X": 0,
+                                        "Y": 1,
+                                        "Z": 0
+                                      },
+                                      "VectorProvider": {
+                                        "Type": "DensityGradient",
+                                        "Density": {
+                                          "Type": "Imported",
+                                          "Skip": false,
+                                          "Name": "AS_Plains1_Mountains_Base_Terrain"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "Type": "CurveMapper",
+                                      "Skip": false,
+                                      "Curve": {
+                                        "Type": "Manual",
+                                        "Points": [
+                                          {
+                                            "In": 80,
+                                            "Out": 0
+                                          },
+                                          {
+                                            "In": 100,
+                                            "Out": 45
+                                          }
+                                        ]
+                                      },
+                                      "Inputs": [
+                                        {
+                                          "Type": "BaseHeight",
+                                          "Skip": false,
+                                          "BaseHeightName": "Base",
+                                          "Distance": true
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Type": "Mix",
+                      "ExportAs": "AS_Plains1_Mountains_Base_Terrain",
+                      "Skip": false,
+                      "Inputs": [
+                        {
+                          "Type": "Sum",
+                          "Skip": false,
+                          "Inputs": [
+                            {
+                              "Type": "YOverride",
+                              "Skip": false,
+                              "Value": 0,
+                              "Inputs": [
+                                {
+                                  "Type": "Cache",
+                                  "Skip": false,
+                                  "Capacity": 3,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Sum",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Normalizer",
+                                          "Skip": false,
+                                          "FromMin": 0,
+                                          "FromMax": 1,
+                                          "ToMin": -1,
+                                          "ToMax": 1,
+                                          "Inputs": [
+                                            {
+                                              "Type": "Pow",
+                                              "Skip": false,
+                                              "Exponent": 2,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Normalizer",
+                                                  "Skip": false,
+                                                  "FromMin": -1,
+                                                  "FromMax": 1,
+                                                  "ToMin": 0,
+                                                  "ToMax": 1,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "SimplexNoise2D",
+                                                      "Skip": false,
+                                                      "Lacunarity": 2,
+                                                      "Persistence": 0.5,
+                                                      "Octaves": 3,
+                                                      "Scale": 500,
+                                                      "Seed": "U"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "Type": "CurveMapper",
+                              "Skip": false,
+                              "Curve": {
+                                "Type": "Manual",
+                                "Points": [
+                                  {
+                                    "In": -30,
+                                    "Out": 1
+                                  },
+                                  {
+                                    "In": 200,
+                                    "Out": -1
+                                  }
+                                ]
+                              },
+                              "Inputs": [
+                                {
+                                  "Type": "BaseHeight",
+                                  "Skip": false,
+                                  "BaseHeightName": "Base",
+                                  "Distance": true
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "CurveMapper",
+                          "Skip": false,
+                          "Curve": {
+                            "Type": "Manual",
+                            "Points": [
+                              {
+                                "In": 0,
+                                "Out": 1
+                              },
+                              {
+                                "In": 0.1,
+                                "Out": -1
+                              }
+                            ]
+                          },
+                          "Inputs": [
+                            {
+                              "Type": "BaseHeight",
+                              "Skip": false,
+                              "BaseHeightName": "Base",
+                              "Distance": true
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "CurveMapper",
+                          "Skip": false,
+                          "Curve": {
+                            "Type": "Manual",
+                            "Points": [
+                              {
+                                "In": -60,
+                                "Out": 1
+                              },
+                              {
+                                "In": -50,
+                                "Out": 0
+                              },
+                              {
+                                "In": 200,
+                                "Out": 0
+                              },
+                              {
+                                "In": 210,
+                                "Out": 1
+                              }
+                            ]
+                          },
+                          "Inputs": [
+                            {
+                              "Type": "BaseHeight",
+                              "Skip": false,
+                              "BaseHeightName": "Base",
+                              "Distance": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Type": "Constant",
+                  "Skip": false,
+                  "Value": 0.2
+                }
+              ]
+            },
+            {
+              "Type": "CurveMapper",
+              "Skip": false,
+              "Curve": {
+                "Type": "Manual",
+                "Points": [
+                  {
+                    "In": 0,
+                    "Out": 1
+                  },
+                  {
+                    "In": 0.1,
+                    "Out": -1
+                  }
+                ]
+              },
+              "Inputs": [
+                {
+                  "Type": "BaseHeight",
+                  "Skip": false,
+                  "BaseHeightName": "Base",
+                  "Distance": true
+                }
+              ]
+            },
+            {
+              "Type": "CurveMapper",
+              "Skip": false,
+              "Curve": {
+                "Type": "Manual",
+                "Points": [
+                  {
+                    "In": -30,
+                    "Out": 1
+                  },
+                  {
+                    "In": -20,
+                    "Out": 0
+                  },
+                  {
+                    "In": 200,
+                    "Out": 0
+                  },
+                  {
+                    "In": 210,
+                    "Out": 1
+                  }
+                ]
+              },
+              "Inputs": [
+                {
+                  "Type": "BaseHeight",
+                  "Skip": false,
+                  "BaseHeightName": "Base",
+                  "Distance": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "Imported",
+          "Skip": false,
+          "Name": "Plains1_Caves_Terrain"
+        }
+      ]
+    }
+  },
+  "MaterialProvider": {
+    "Type": "Solidity",
+    "Solid": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "SimpleHorizontal",
+          "TopY": 1,
+          "TopBaseHeight": "Bedrock",
+          "BottomY": 0,
+          "BottomBaseHeight": "Bedrock",
+          "Material": {
+            "Type": "Constant",
+            "Material": {
+              "Solid": "Rock_Bedrock"
+            }
+          }
+        },
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Rock_Sandstone"
+          }
+        }
+      ]
+    },
+    "Empty": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Empty"
+          }
+        }
+      ]
+    }
+  },
+  "EnvironmentProvider": {
+    "Type": "Constant",
+    "Environment": "Env_Arrakis"
+  },
+  "Props": []
+}

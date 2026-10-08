@@ -1,4 +1,6 @@
 // Builds the Arrakis_Rock density graph (round 2). Used by both the preview renderer and the biome writer.
+const fs = require('fs');
+const path = require('path');
 const UNIT = 120; // density 1.0 in the A terms = 120 m above Base
 
 const c = v => ({ Type: 'Constant', Value: v, Skip: false });
@@ -25,6 +27,9 @@ function terraceCurve(levels, ramps, rootCut, riser = 0.15, tilt = 0.12) {
 
 function makeRock(P) {
   const dist0 = (pts, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'Distance', Skip: false, Curve: curve(pts) }); // distance from the world origin
+  // ---- Latitude (north is -Z, south is +Z) ----
+  const T = P.latitude;
+  const byLatitude = (pts, comment) => node('CurveMapper', [{ Type: 'ZValue', Skip: false }], { Curve: curve(pts) }, comment);
   const G = P.guaranteedIsland;
   const guaranteed = { Type: 'List', Skip: false, Positions: [{ X: G.x, Y: 0, Z: G.z }] };
   const gridIslands = {
@@ -32,10 +37,16 @@ function makeRock(P) {
     Type: 'Offset', Skip: false, OffsetX: 900, OffsetY: 0, OffsetZ: 900,
     Positions: {
       $Comment: 'Randomly drop 30% of the positions.',
-      Type: 'Occurrence', Skip: false, Seed: 'Arrakis_Islands_Drop', FieldFunction: c(0.7),
+      Type: 'Occurrence', Skip: false, Seed: 'Arrakis_Islands_Drop', FieldFunction: T ? byLatitude(T.regularKeep, 'Chance that a regular large island exists, by latitude (north is -Z).') : c(0.7),
       Positions: { Type: 'Mesh2D', Skip: false, PointsY: 0,
         PointGenerator: { Type: 'Mesh', Jitter: 0.2, ScaleX: 2500, ScaleY: 2500, ScaleZ: 2500, Seed: 'Arrakis_Islands' } }
     }
+  };
+  const beltIslands = T && {
+    $Comment: 'Belt islands: large east-west islands on a wide grid, present only in the northern belt.',
+    Type: 'Occurrence', Skip: false, Seed: 'Arrakis_Belt_Drop', FieldFunction: byLatitude(T.beltKeep, 'Chance that a belt island exists, by latitude.'),
+    Positions: { Type: 'Mesh2D', Skip: false, PointsY: 0,
+      PointGenerator: { Type: 'Mesh', Jitter: T.beltJitter, ScaleX: T.beltGridX, ScaleY: T.beltGridZ, ScaleZ: T.beltGridZ, Seed: 'Arrakis_Belt' } }
   };
   const islandPositions = P.previewIslandAt
     ? { Type: 'List', Skip: false, Positions: [{ X: P.previewIslandAt[0], Y: 0, Z: P.previewIslandAt[1] }] }
@@ -47,7 +58,7 @@ function makeRock(P) {
               ReturnType: { Type: 'Curve', Curve: curve([[G.clear - 1, 0], [G.clear, 1]]) }, DistanceFunction: { Type: 'Euclidean' } },
             Delimiters: [{ Min: 0.5, Max: 2 }],
             Positions: gridIslands }
-        ] };
+        ].concat(beltIslands ? [beltIslands] : []) };
 
   const S = P.start;
   // Same node the dune branch gets: the clamped dune noise, forced down to "no dune" near the origin.
@@ -76,7 +87,20 @@ function makeRock(P) {
   const fieldInputs = [radial,
     norm(-I.lobeAmp, I.lobeAmp, noise2d(I.lobeScale, 2, 'Arrakis_Islands_Lobes'), 'Lobes: breaks the mass into bays, peninsulas and detached pieces.'),
     norm(-I.detailAmp, I.detailAmp, noise2d(I.detailScale, 2, 'Arrakis_Islands_Coast'), 'Fine coastline detail.')];
-  const F = node('Sum', fieldInputs, null, 'Island field F: > 0 is rock.');
+  const regularF = node('Sum', fieldInputs, null, 'Regular island field: > 0 is rock.');
+  const beltF = T && node('Sum', [
+    { $Comment: 'Belt island footprint: an east-west ellipse per island. The size class comes from how deep in the belt the island centre is.',
+      Type: 'PositionsCellNoise', Skip: false, MaxDistance: 2 * Math.max(...T.beltSizes.map(s => s[0])) + 200, Positions: beltIslands,
+      ReturnType: { Type: 'Density', ChoiceDensity: byLatitude(T.beltStrength, 'Belt strength at the island centre: 0 at the edges of the belt, 1 at its core.'),
+        Delimiters: T.beltSizes.map(([halfEW, halfNS], i) => ({ From: i / T.beltSizes.length, To: i === T.beltSizes.length - 1 ? 1.01 : (i + 1) / T.beltSizes.length,
+          Density: node('Anchor', [{ Type: 'Ellipsoid', Skip: false, Spin: 0, Curve: curve([[0, 1], [1, 0], [2, -1]]), Scale: { X: halfEW, Y: 1, Z: halfNS }, NewYAxis: { X: 0, Y: 1, Z: 0 } }], { Reversed: false },
+            `Belt island about ${2 * halfEW} m east-west by ${2 * halfNS} m north-south.`) })), DefaultValue: -1 },
+      DistanceFunction: { Type: 'Euclidean' } },
+    norm(-T.beltLobeAmp, T.beltLobeAmp, noise2d(T.beltLobeScale, 2, 'Arrakis_Belt_Lobes'), 'Broad lobes: bays and sand channels at the scale of a belt island.'),
+    norm(-T.beltBayAmp, T.beltBayAmp, noise2d(T.beltBayScale, 2, 'Arrakis_Belt_Bays'), 'Smaller bays.'),
+    norm(-I.detailAmp, I.detailAmp, noise2d(I.detailScale, 2, 'Arrakis_Belt_Coast'), 'Fine coastline detail.')
+  ], null, 'Belt island field: > 0 is rock.');
+  const F = T ? node('Max', [regularF, beltF], null, 'Island field F: > 0 is rock.') : regularF;
   const edge = node('Multiplier', [c(+m(I.edgeMetres).toFixed(5)), F], null, `Height available from the shore inwards: F * ${I.edgeMetres} m.`);
   const cap = node('CurveMapper', [noise2d(I.capScale, 3, 'Arrakis_Islands_Tops')], { Curve: curve(I.capCurve.map(([i, o]) => [i, m(o)])) },
     'Height cap: low benches where the noise is low, summits where it is high.');
@@ -128,7 +152,8 @@ function makeRock(P) {
     const shift = () => L.spawnShare
       ? node('Min', [islandShift(), dist0([[L.spawnRadius, fill * (1 - L.spawnShare)], [L.spawnRadius + 80, 3]], `Near spawn about ${Math.round(L.spawnShare * 100)}% of cells are filled whatever the island distance, so there are stepping stones.`)])
       : node('Max', [islandShift(), dist0([[L.spawnClear, 3], [L.spawnClear + 1, 0]], `No cells of this layer within ${L.spawnClear} m of spawn.`)]);
-    const v = () => node('Sum', [{ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_Choice_' + name, Skip: false }, shift()]);
+    const latitudeShift = () => (T && L.southShare) ? node('Min', [shift(), byLatitude([[0, 3], [T.southEnd, fill * (1 - L.southShare / L.fill)]], `Going south, cells fill on their own whatever the island distance, up to ${Math.round(L.southShare * 100)}% of cells by ${T.southEnd} m south.`)]) : shift();
+    const v = () => node('Sum', [{ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_Choice_' + name, Skip: false }, latitudeShift()]);
     const cellValue = (density, def, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.maxDistance, Positions: positions,
       ReturnType: { Type: 'CellValue', Density: density, DefaultValue: def }, DistanceFunction: { Type: 'Euclidean' } });
     const white = tag => ({ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_' + tag + '_' + name, Skip: false });
@@ -159,6 +184,7 @@ function makeRock(P) {
     ], null, 'Outcrop field before the safety fade.');
     const copy = n => JSON.parse(JSON.stringify(n));
     const F = node('Min', [rawF, safety()], null, 'Outcrop field F: > 0 is rock.');
+    if (P.variants) return F;
     const cap = node('CurveMapper', [noise2d(L.capScale, 2, 'Arrakis_Outcrops_Tops_' + name, 0.3)], { Curve: curve(L.capCurve) }, 'Cap: benches where the noise is low, high points where it is high.');
     return node('Min', [
       node('Multiplier', [heightScale, node('Min', [F, cap])], null, 'Height above the sand: the height of this cell times the capped field.'),
@@ -195,6 +221,117 @@ function makeRock(P) {
     ])
   ])], { Curve: curve([[m(-P.rootCut - 0.05), -3], [m(-P.rootCut), m(-P.rootCut)], [2, 2]]) },
     `Starting outcrop with landing pad: flat at Base + ${S.padHeight} m within ${S.padRadius} m of the origin. The curve only applies the root cut.`);
+  if (P.variants) return variantRock();
+
+  // ---- Rock from vanilla terrain recipes ("variants"), one picked per large island and shared by its outcrop chain ----
+  function variantRock() {
+    const V = P.variants;
+    const vanilla = process.env.VANILLA_GEN;
+    if (!vanilla) throw new Error('Set VANILLA_GEN to an extracted copy of the game\'s Server/HytaleGenerator folder (the variants are built from its biomes).');
+    const cache2d = n => node('YOverride', [node('Cache', [n], { Capacity: 3 })], { Value: 0 });
+    const step01 = (n, comment) => node('Clamp', [node('Multiplier', [c(1000000), n])], { WallA: 0, WallB: 1 }, comment);
+    const copyNode = n => JSON.parse(JSON.stringify(n));
+    const height = () => node('CurveMapper', [{ Type: 'BaseHeight', BaseHeightName: 'Base', Distance: true, Skip: false }], { Curve: curve([[-200, 2], [400, -4]]) }); // -(y - Base) / 100
+    const walk = (n, fn) => { if (n && typeof n === 'object') { if (!Array.isArray(n)) fn(n); for (const v of Object.values(n)) walk(v, fn); } };
+    const clean = n => { if (Array.isArray(n)) return n.map(clean); if (n && typeof n === 'object') { const o = {}; for (const [k, v] of Object.entries(n)) if (!k.startsWith('$') || k === '$Comment') o[k] = clean(v); return o; } return n; };
+
+    // Distance measures from the world origin in 3D. These uses are evaluated per voxel, so the height has to be zeroed first.
+    const flatDist = (pts, comment) => node('YOverride', [dist0(pts)], { Value: 0 }, comment);
+    // Footprint fields, all "1 at the centre, 0 at the shore".
+    const fields = { large: F, medium: outcropLayersAll[0], small: outcropLayersAll[1], start: startF() };
+    // What the recipes are told in place of DistanceToBiomeEdge: how far inside its island or outcrop a column is, on the scale of a full-size island.
+    let insideDefined = false;
+    const inside = () => { if (insideDefined) return { Type: 'Imported', Name: 'Arrakis_Inside', Skip: false }; insideDefined = true;
+      return { $Comment: 'How far inside its rock body a column is, as if every body were a full-size island. Stands in for DistanceToBiomeEdge in the recipes.',
+        Type: 'Exported', ExportAs: 'Arrakis_Inside', SingleInstance: true, Skip: false,
+        Inputs: [cache2d(node('Max', Object.values(fields).map(f => node('Multiplier', [c(V.edgeReference), copyNode(f)]))))] }; };
+    const insideDefinition = inside();
+
+    // The recipes: vanilla terrain densities copied unchanged apart from export names and the biome-edge distance, merged by patches.
+    const recipe = (mix, index) => {
+      const tag = 'ArrakisV' + (index + 1);
+      const copies = mix.map((n, k) => {
+        const terrain = clean(JSON.parse(fs.readFileSync(path.join(vanilla, 'Biomes', V.sources[n] + '.json'), 'utf8')).Terrain.Density);
+        const prefix = tag + String.fromCharCode(97 + k) + '_', exported = new Set();
+        walk(terrain, x => { if (typeof x.ExportAs === 'string' && x.ExportAs) exported.add(x.ExportAs); });
+        walk(terrain, x => {
+          if (typeof x.ExportAs === 'string' && x.ExportAs) x.ExportAs = prefix + x.ExportAs;
+          if (x.Type === 'Imported' && exported.has(x.Name)) x.Name = prefix + x.Name;
+          if (x.Type === 'DistanceToBiomeEdge') { for (const key of Object.keys(x)) delete x[key]; Object.assign(x, node('Clamp', [inside()], { WallA: 0, WallB: 2000 })); }
+        });
+        return terrain;
+      });
+      let merged = copies[0];
+      for (let k = 1; k < copies.length; k++) {
+        const share = 1 / (k + 1);
+        merged = node('Mix', [merged, copies[k], node('CurveMapper', [noise2d(V.patchScale, 1, tag + '_Patch' + k)], { Curve: curve([[-1, 0], [1 - 2 * share - 0.3, 0], [1 - 2 * share + 0.3, 1], [1, 1]]) })], null, 'Merge by patches.');
+      }
+      return { $Comment: `Variant ${index + 1}: vanilla recipe${mix.length > 1 ? 's' : ''} ${mix.map(n => '#' + n + ' ' + path.basename(V.sources[n])).join(' + ')}.`,
+        Type: 'Exported', ExportAs: tag, SingleInstance: false, Skip: false, Inputs: [merged] };
+    };
+    const definitions = V.mixes.map(recipe);
+    const used = new Set();
+    // Exported once (not single-instance); every later use imports its own copy with its own caches.
+    const variant = i => { if (used.has(i)) return { Type: 'Imported', Name: 'ArrakisV' + (i + 1), Skip: false }; used.add(i); return definitions[i]; };
+
+    // Which variant: one white-noise value per large island, read by its whole chain. Evaluated once per column.
+    const pickOf = (positions, maxDistance, name) => { let defined = false;
+      return () => { if (defined) return { Type: 'Imported', Name: name, Skip: false }; defined = true;
+        return { $Comment: 'Variant pick, -1..1, constant across one rock body and its chain.', Type: 'Exported', ExportAs: name, SingleInstance: true, Skip: false,
+          Inputs: [cache2d({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: maxDistance, Positions: positions,
+            ReturnType: { Type: 'CellValue', Density: { Type: 'WhiteNoise', Seed: 'Arrakis_Variant_Pick', Skip: false }, DefaultValue: 0 }, DistanceFunction: { Type: 'Euclidean' } })] }; }; };
+    const islandPick = (() => { let defined = false; return () => { if (defined) return { Type: 'Imported', Name: 'Arrakis_Pick', Skip: false }; defined = true;
+      const whiteAt = (positions, maxDistance) => ({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: maxDistance, Positions: positions,
+        ReturnType: { Type: 'CellValue', Density: { Type: 'WhiteNoise', Seed: 'Arrakis_Variant_Pick', Skip: false }, DefaultValue: 0 }, DistanceFunction: { Type: 'Euclidean' } });
+      const reach = T ? 2 * Math.max(...T.beltSizes.map(s => s[0])) + 400 : 1200;
+      const mediumCells = { Type: 'Mesh2D', Skip: false, PointsY: 0, PointGenerator: { Type: 'Mesh', Jitter: O.medium.jitter, ScaleX: O.medium.grid, ScaleY: O.medium.grid, ScaleZ: O.medium.grid, Seed: 'Arrakis_Outcrops_Medium' } };
+      return { $Comment: 'Variant pick, -1..1. One value per large island, shared by its whole land mass and its outcrop chain; a medium island with no large island nearby picks for itself.',
+        Type: 'Exported', ExportAs: 'Arrakis_Pick', SingleInstance: true, Skip: false, Inputs: [cache2d(node('Mix', [
+          whiteAt(mediumCells, O.medium.maxDistance),
+          whiteAt(islandPositions, reach),
+          step01(node('Max', [node('Sum', [copyNode(F), c(0.05)]),
+            { Type: 'PositionsCellNoise', Skip: false, MaxDistance: 1300, Positions: islandPositions, ReturnType: { Type: 'Curve', Curve: curve([[1199, 1], [1200, -1]]) }, DistanceFunction: { Type: 'Euclidean' } }]),
+            '1 on a large island or within 1200 m of its centre.')
+        ]))] }; }; })();
+    const startPick = pickOf({ Type: 'List', Skip: false, Positions: [{ X: 0, Y: 0, Z: 0 }] }, 400, 'Arrakis_Pick_Start');
+    const n = V.mixes.length;
+    // Slider evaluates its input at (position - slide): SlideY = -sink reads the recipe `sink` blocks higher up, so the shape moves down.
+    // Mix evaluates only its first input when the influence is 0, so only the picked variant is ever evaluated.
+    const picked = (sink, pick) => node('Max', V.mixes.map((_, i) => node('Mix', [c(-5),
+      node('Slider', [variant(i)], { SlideX: 0, SlideY: -sink, SlideZ: 0 }),
+      step01(node('CurveMapper', [pick()], { Curve: curve([[-1 + 2 * i / n - 0.0001, -1], [-1 + 2 * i / n, 1], [-1 + 2 * (i + 1) / n - 0.0001, 1], [-1 + 2 * (i + 1) / n, i === n - 1 ? 1 : -1]]) }), `1 where variant ${i + 1} is the pick.`)
+    ])), null, `The picked variant, lowered ${sink} blocks.`);
+
+    const body = (name, field, cls, pick) => node('Mix', [c(-5), node('Min', [
+      picked(cls.sink, pick),
+      node('Sum', [node('Multiplier', [c(+(V.coastSlope * cls.nominalRadius / 100).toFixed(4)), cache2d(copyNode(field))]), height()], null, `Coast: rock may rise about ${V.coastSlope} m for every metre in from the shore.`),
+      // Root rule: a column keeps its rock (at every depth) only if the recipe is solid just under sand level there,
+      // so every mass that breaks the sand has its own steep-sided root and nothing is joined under the sand.
+      node('CurveMapper', [node('YOverride', [node('Cache', [picked(cls.sink, pick)], { Capacity: 3 })], { Value: P.sandLevel - V.rootDepth })], { Curve: curve([[-0.0001, -5], [0.0001, 5]]) },
+        `Root: no rock at any depth in columns where the recipe is not solid ${V.rootDepth} blocks below sand level.`)
+    ]), step01(node('Sum', [cache2d(copyNode(field)), c(0.012)]), '1 inside a ' + name + ' footprint.')], null, `${name}: picked variant lowered ${cls.sink} blocks, inside its footprints only.`);
+
+    const others = node('Min', [
+      node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]),
+      flatDist([[S.othersClear, -5], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the landing pad.`)
+    ]);
+    // Starting island at the origin with a landing pad. Two cones hold the ground near the pad: nothing below the lower one, nothing above
+    // the upper one. Inside the pad radius both sit at the pad height, so the pad is flat and open to the sky; outside they open at a walkable slope.
+    const cone = (sign, comment) => node('Sum', [flatDist([[0, S.padHeight / 100], [S.padRadius, S.padHeight / 100], [S.padRadius + 200, (S.padHeight + sign * 200 * V.padSlope) / 100]]), height()], null, comment);
+    const padReach = S.padRadius + Math.ceil(S.padHeight / V.padSlope) + 2;
+    const start = node('Min', [
+      node('Max', [
+        body('Starting island', fields.start, V.start, startPick),
+        node('Min', [cone(-1, `Pad floor: solid up to Base + ${S.padHeight} within ${S.padRadius} m of the origin, sloping down to the sand at ${V.padSlope} outside it.`),
+          flatDist([[padReach, 5], [padReach + 1, -5]], 'The pad base stops at a vertical edge under the sand (root rule).')])
+      ]),
+      cone(1, `Pad ceiling: nothing above Base + ${S.padHeight} within ${S.padRadius} m of the origin; outside, the ground may rise at ${V.padSlope}.`)
+    ], null, 'Starting island with landing pad.');
+    const rock = { $Comment: 'Rock: > 0 is rock. Vanilla terrain recipes inside our island and outcrop footprints.', Type: 'Exported', ExportAs: 'Arrakis_Rock', SingleInstance: true, Skip: false,
+      Inputs: [node('Sum', [node('Max', [others, start]), node('Multiplier', [c(0), insideDefinition], null, 'Holds the definition of Arrakis_Inside; adds exactly 0.')])] };
+    return { A: null, B: null, duneHeight, duneNoise, UNIT, rock };
+  }
+
   const others = node('Min', [terraced([islandPre, ...outcropLayers]),
     dist0([[S.othersClear, -3], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the pad.`)]);
   const A = node('YOverride', [node('Cache', [
@@ -207,6 +344,28 @@ function makeRock(P) {
 }
 
 const PARAMS = {
+  // North is -Z. A belt of large east-west islands peaks 10 km north of spawn and is back to normal by 20 km north.
+  // Going south, large islands thin out and by 20 km south only free-standing medium islands remain.
+  latitude: {
+    southEnd: 20000,
+    // [z, value] points; curves hold their end values beyond the last point
+    regularKeep: [[-20000, 0.7], [-10000, 0.15], [-2500, 0.7], [0, 0.7], [20000, 0]],
+    beltKeep: [[-20000, 0], [-10000, 0.9], [-2500, 0]],
+    beltStrength: [[-20000, 0], [-10000, 1], [-2500, 0]],
+    beltGridX: 4000, beltGridZ: 1800, beltJitter: 0.12,
+    // [half east-west, half north-south] by belt strength, weakest first
+    beltSizes: [[500, 330], [750, 400], [1050, 470], [1350, 520]],
+    beltLobeAmp: 0.45, beltLobeScale: 520, beltBayAmp: 0.14, beltBayScale: 150
+  },
+  // Rock variants: vanilla terrain recipes, alone or merged. One is picked per large island and used by its whole outcrop chain.
+  variants: {
+    sources: { 1: 'Plains1/Plains1_Mountains', 3: 'Experimental/Mountains', 5: 'Experimental/Taiga1_Redwood_2dCliffs', 6: 'Plains1/Plains1_Gorges' },
+    // 1+6 and 3+6 were dropped: most floating rock in the showcase.
+    mixes: [[1], [3], [5], [6], [1, 3], [1, 5], [3, 5], [5, 6], [1, 3, 5], [1, 3, 5, 6]],
+    edgeReference: 300, patchScale: 240, coastSlope: 1.3, rootDepth: 4, padSlope: 0.6,
+    large: { sink: 20, nominalRadius: 300 }, medium: { sink: 40, nominalRadius: 75 }, small: { sink: 50, nominalRadius: 28 }, start: { sink: 30, nominalRadius: 100 }
+  },
+  sandLevel: 80, // must equal Base in WorldStructures/Arrakis.json; write.js checks it
   // Rock more than this many metres below the sand surface height field is removed, so roots go straight down.
   rootCut: 4,
   guaranteedIsland: { x: 640, z: -480, clear: 1200 },
@@ -224,7 +383,7 @@ const PARAMS = {
   outcrops: {
     windAngle: 30, rimSteepness: 3, edgeNoise: 0.28,
     // variants: [shareOfCells, semiLengthAlongLean, semiWidth, leanOffsetDeg, crestMetres]; biggest first
-    medium: { islandLike: true, spawnClear: 350, grid: 400, jitter: 0.14, maxDistance: 200, fadeStart: 450, fadeEnd: 1000,
+    medium: { islandLike: true, southShare: 0.15, spawnClear: 350, grid: 400, jitter: 0.14, maxDistance: 200, fadeStart: 450, fadeEnd: 1000,
       fill: 0.9, radiusCurve: [[-1, 50], [0, 72], [1, 97]], farShrink: 0.8,
       lobeAmp: 0.45, lobeScale: 75, detailAmp: 0.03, detailScale: 22, capScale: 85,
       heightPerRadius: 0.4, heightVariety: [[-1, 0.4], [0, 0.9], [1, 1.4]], capCurve: [[-1, 0.3], [-0.2, 0.45], [0.2, 0.8], [0.6, 1.1], [1, 1.1]],

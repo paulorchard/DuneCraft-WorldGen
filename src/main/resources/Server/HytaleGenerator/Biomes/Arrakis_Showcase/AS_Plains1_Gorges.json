@@ -1,0 +1,1104 @@
+{
+  "Name": "AS_Plains1_Gorges",
+  "Terrain": {
+    "Type": "DAOTerrain",
+    "Density": {
+      "Type": "Min",
+      "Skip": false,
+      "Inputs": [
+        {
+          "Type": "Multiplier",
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "Constant",
+              "Skip": false,
+              "Value": 4
+            },
+            {
+              "Type": "Imported",
+              "Skip": false,
+              "Name": "Plains1_Caves_Terrain"
+            }
+          ]
+        },
+        {
+          "Type": "Multiplier",
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "Exported",
+              "ExportAs": "AS_Plains1-Gorges-Terrain",
+              "SingleInstance": false,
+              "Skip": false,
+              "Inputs": [
+                {
+                  "Type": "Cache",
+                  "Skip": false,
+                  "Capacity": 1,
+                  "Inputs": [
+                    {
+                      "Type": "Mix",
+                      "Skip": false,
+                      "Inputs": [
+                        {
+                          "Type": "Mix",
+                          "Skip": false,
+                          "Inputs": [
+                            {
+                              "Type": "Exported",
+                              "ExportAs": "AS_Plains1-Gorges-BaseTerrain",
+                              "SingleInstance": false,
+                              "Skip": false,
+                              "Inputs": [
+                                {
+                                  "Type": "Mix",
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Exported",
+                                      "ExportAs": "AS_Plains1-Gorges-BaseTerrain",
+                                      "SingleInstance": false,
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.7,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "AmplitudeConstant",
+                                                      "Skip": false,
+                                                      "Value": 0.925,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Exported",
+                                                          "ExportAs": "AS_Plains1-Gorges-LargeHills-Noise",
+                                                          "SingleInstance": false,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Skip": false,
+                                                              "Lacunarity": 3,
+                                                              "Persistence": 1,
+                                                              "Octaves": 1,
+                                                              "Scale": 250,
+                                                              "Seed": "Hills"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "Type": "AmplitudeConstant",
+                                                      "Skip": false,
+                                                      "Value": 0.075,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "SimplexNoise2D",
+                                                          "Skip": false,
+                                                          "Lacunarity": 3,
+                                                          "Persistence": 0.5,
+                                                          "Octaves": 2,
+                                                          "Scale": 50,
+                                                          "Seed": "HillsNoise"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "CurveMapper",
+                                              "Skip": false,
+                                              "Curve": {
+                                                "Type": "Manual",
+                                                "Points": [
+                                                  {
+                                                    "In": 0,
+                                                    "Out": 1
+                                                  },
+                                                  {
+                                                    "In": 60,
+                                                    "Out": -1
+                                                  }
+                                                ]
+                                              },
+                                              "Inputs": [
+                                                {
+                                                  "Type": "BaseHeight",
+                                                  "Skip": false,
+                                                  "BaseHeightName": "Base",
+                                                  "Distance": true
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.3,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "AmplitudeConstant",
+                                                      "Skip": false,
+                                                      "Value": 0.95,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Exported",
+                                                          "ExportAs": "AS_Plains1-Gorges-Base-Noise",
+                                                          "SingleInstance": false,
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Skip": false,
+                                                              "Lacunarity": 2,
+                                                              "Persistence": 1,
+                                                              "Octaves": 2,
+                                                              "Scale": 175,
+                                                              "Seed": "Base"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "Type": "AmplitudeConstant",
+                                                      "Skip": false,
+                                                      "Value": 0.05,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "SimplexNoise2D",
+                                                          "Skip": false,
+                                                          "Lacunarity": 2,
+                                                          "Persistence": 2,
+                                                          "Octaves": 2,
+                                                          "Scale": 25,
+                                                          "Seed": "BaseNoise"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Type": "Sum",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.65,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "SimplexNoise2D",
+                                                  "Skip": false,
+                                                  "Lacunarity": 1,
+                                                  "Persistence": 1,
+                                                  "Octaves": 2,
+                                                  "Scale": 50,
+                                                  "Seed": "Crevice"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.35,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "SimplexNoise2D",
+                                                  "Skip": false,
+                                                  "Lacunarity": 2,
+                                                  "Persistence": 2,
+                                                  "Octaves": 2,
+                                                  "Scale": 50,
+                                                  "Seed": "Crevice"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "Type": "CurveMapper",
+                                          "Skip": false,
+                                          "Curve": {
+                                            "Type": "Manual",
+                                            "Points": [
+                                              {
+                                                "In": -20,
+                                                "Out": 1
+                                              },
+                                              {
+                                                "In": 0,
+                                                "Out": -1
+                                              }
+                                            ]
+                                          },
+                                          "Inputs": [
+                                            {
+                                              "Type": "BaseHeight",
+                                              "Skip": false,
+                                              "BaseHeightName": "Base",
+                                              "Distance": true
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Type": "Min",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.7,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Normalizer",
+                                                  "Skip": false,
+                                                  "FromMin": 0.25,
+                                                  "FromMax": 0.5,
+                                                  "ToMin": -0.25,
+                                                  "ToMax": 0.9,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "AmplitudeConstant",
+                                                      "Skip": false,
+                                                      "Value": 0.55,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Sum",
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "YOverride",
+                                                              "Skip": false,
+                                                              "Value": 1,
+                                                              "Inputs": [
+                                                                {
+                                                                  "Type": "Cache",
+                                                                  "Skip": false,
+                                                                  "Capacity": 1,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "PositionsCellNoise",
+                                                                      "Skip": false,
+                                                                      "MaxDistance": 150,
+                                                                      "Positions": {
+                                                                        "Type": "Mesh2D",
+                                                                        "Skip": false,
+                                                                        "PointsY": 0,
+                                                                        "PointGenerator": {
+                                                                          "Type": "Mesh",
+                                                                          "Skip": false,
+                                                                          "Jitter": 0.5,
+                                                                          "ScaleX": 125,
+                                                                          "ScaleY": 1,
+                                                                          "ScaleZ": 125,
+                                                                          "Seed": "Crevices"
+                                                                        }
+                                                                      },
+                                                                      "ReturnType": {
+                                                                        "Type": "Distance2Div"
+                                                                      },
+                                                                      "DistanceFunction": {
+                                                                        "Type": "Euclidean"
+                                                                      }
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "Type": "AmplitudeConstant",
+                                                              "Skip": false,
+                                                              "Value": 0.25,
+                                                              "Inputs": [
+                                                                {
+                                                                  "Type": "SimplexNoise2D",
+                                                                  "Skip": false,
+                                                                  "Lacunarity": 5,
+                                                                  "Persistence": 1,
+                                                                  "Octaves": 1,
+                                                                  "Scale": 40,
+                                                                  "Seed": "CreviceWarp"
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.3,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Inverter",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Imported",
+                                                      "Skip": false,
+                                                      "Name": "AS_Plains1-Gorges-Plateaus-Texture"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "Type": "Normalizer",
+                                          "Skip": false,
+                                          "FromMin": -0.5,
+                                          "FromMax": 0.75,
+                                          "ToMin": 0,
+                                          "ToMax": 0.375,
+                                          "Inputs": [
+                                            {
+                                              "Type": "Inverter",
+                                              "Skip": false,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Imported",
+                                                  "Skip": false,
+                                                  "Name": "AS_Plains1-Gorges-LargeHills-Noise"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "Type": "Max",
+                              "Skip": false,
+                              "Inputs": [
+                                {
+                                  "Type": "Cache",
+                                  "Skip": false,
+                                  "Capacity": 1,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Sum",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "SimplexNoise2D",
+                                          "Skip": false,
+                                          "Lacunarity": 5,
+                                          "Persistence": 2,
+                                          "Octaves": 2,
+                                          "Scale": 250,
+                                          "Seed": "Base2"
+                                        },
+                                        {
+                                          "Type": "CurveMapper",
+                                          "Skip": false,
+                                          "Curve": {
+                                            "Type": "Manual",
+                                            "Points": [
+                                              {
+                                                "In": 20,
+                                                "Out": 1
+                                              },
+                                              {
+                                                "In": 40,
+                                                "Out": -1
+                                              }
+                                            ]
+                                          },
+                                          "Inputs": [
+                                            {
+                                              "Type": "BaseHeight",
+                                              "Skip": false,
+                                              "BaseHeightName": "Base",
+                                              "Distance": true
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Type": "Max",
+                                  "ExportAs": "AS_Plains1-Gorges-Plateau-Terrain",
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Min",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.2,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Exported",
+                                                  "ExportAs": "AS_Plains1-Gorges-Plateaus-Texture",
+                                                  "SingleInstance": false,
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Sum",
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Inverter",
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "YOverride",
+                                                              "Skip": false,
+                                                              "Value": 1,
+                                                              "Inputs": [
+                                                                {
+                                                                  "Type": "Cache",
+                                                                  "Skip": false,
+                                                                  "Capacity": 1,
+                                                                  "Inputs": [
+                                                                    {
+                                                                      "Type": "PositionsCellNoise",
+                                                                      "Skip": false,
+                                                                      "MaxDistance": 30,
+                                                                      "Positions": {
+                                                                        "Type": "Mesh2D",
+                                                                        "Skip": false,
+                                                                        "PointsY": 0,
+                                                                        "PointGenerator": {
+                                                                          "Type": "Mesh",
+                                                                          "Skip": false,
+                                                                          "Jitter": 0.5,
+                                                                          "ScaleX": 20,
+                                                                          "ScaleY": 1,
+                                                                          "ScaleZ": 20,
+                                                                          "Seed": "Texture"
+                                                                        }
+                                                                      },
+                                                                      "ReturnType": {
+                                                                        "Type": "Distance2Div"
+                                                                      },
+                                                                      "DistanceFunction": {
+                                                                        "Type": "Euclidean"
+                                                                      }
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "Type": "CurveMapper",
+                                                          "Skip": false,
+                                                          "Curve": {
+                                                            "Type": "Manual",
+                                                            "Points": [
+                                                              {
+                                                                "In": 20,
+                                                                "Out": 1
+                                                              },
+                                                              {
+                                                                "In": 60,
+                                                                "Out": -1
+                                                              }
+                                                            ]
+                                                          },
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "BaseHeight",
+                                                              "Skip": false,
+                                                              "BaseHeightName": "Base",
+                                                              "Distance": true
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.8,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "YOverride",
+                                                      "Skip": false,
+                                                      "Value": 1,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Cache",
+                                                          "Skip": false,
+                                                          "Capacity": 1,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "Inverter",
+                                                              "Skip": false,
+                                                              "Inputs": [
+                                                                {
+                                                                  "Type": "PositionsCellNoise",
+                                                                  "Skip": false,
+                                                                  "MaxDistance": 90,
+                                                                  "Positions": {
+                                                                    "Type": "Mesh2D",
+                                                                    "ExportAs": "AS_Plains1-Gorges_Plateaus_Mesh2D",
+                                                                    "Skip": false,
+                                                                    "PointsY": 0,
+                                                                    "PointGenerator": {
+                                                                      "Type": "Mesh",
+                                                                      "Skip": false,
+                                                                      "Jitter": 0.5,
+                                                                      "ScaleX": 60,
+                                                                      "ScaleY": 60,
+                                                                      "ScaleZ": 60,
+                                                                      "Seed": "Plateaus"
+                                                                    }
+                                                                  },
+                                                                  "ReturnType": {
+                                                                    "Type": "Distance2Div"
+                                                                  },
+                                                                  "DistanceFunction": {
+                                                                    "Type": "Euclidean"
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "Type": "CurveMapper",
+                                                      "Skip": false,
+                                                      "Curve": {
+                                                        "Type": "Manual",
+                                                        "Points": [
+                                                          {
+                                                            "In": 0,
+                                                            "Out": 0.65
+                                                          },
+                                                          {
+                                                            "In": 65,
+                                                            "Out": 0.5
+                                                          },
+                                                          {
+                                                            "In": 75,
+                                                            "Out": -1
+                                                          }
+                                                        ]
+                                                      },
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "BaseHeight",
+                                                          "Skip": false,
+                                                          "BaseHeightName": "Base",
+                                                          "Distance": true
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "Type": "Sum",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "Sum",
+                                              "Skip": false,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "YOverride",
+                                                  "Skip": false,
+                                                  "Value": 1,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Inverter",
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "PositionsCellNoise",
+                                                          "Skip": false,
+                                                          "MaxDistance": 90,
+                                                          "Positions": {
+                                                            "Type": "Imported",
+                                                            "Name": "AS_Plains1-Gorges_Plateaus_Mesh2D",
+                                                            "Skip": false
+                                                          },
+                                                          "ReturnType": {
+                                                            "Type": "CellValue",
+                                                            "Density": {
+                                                              "Type": "Cache",
+                                                              "Skip": false,
+                                                              "Capacity": 1,
+                                                              "Inputs": [
+                                                                {
+                                                                  "Type": "SimplexNoise2D",
+                                                                  "Skip": false,
+                                                                  "Lacunarity": 2,
+                                                                  "Persistence": 0.5,
+                                                                  "Octaves": 1,
+                                                                  "Scale": 50,
+                                                                  "Seed": "A"
+                                                                }
+                                                              ]
+                                                            },
+                                                            "DefaultValue": 0
+                                                          },
+                                                          "DistanceFunction": {
+                                                            "Type": "Euclidean"
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "Type": "CurveMapper",
+                                                  "Skip": false,
+                                                  "Curve": {
+                                                    "Type": "Manual",
+                                                    "Points": [
+                                                      {
+                                                        "In": 40,
+                                                        "Out": 1
+                                                      },
+                                                      {
+                                                        "In": 70,
+                                                        "Out": -1
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "BaseHeight",
+                                                      "Skip": false,
+                                                      "BaseHeightName": "Base",
+                                                      "Distance": true
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "AmplitudeConstant",
+                                              "Skip": false,
+                                              "Value": 0.5,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Sum",
+                                                  "Skip": false,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Sum",
+                                                      "Skip": false,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "AmplitudeConstant",
+                                                          "Skip": false,
+                                                          "Value": 0.8,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Skip": false,
+                                                              "Lacunarity": 2,
+                                                              "Persistence": 0.5,
+                                                              "Octaves": 2,
+                                                              "Scale": 150,
+                                                              "Seed": "Plateau_Peaks"
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "Type": "AmplitudeConstant",
+                                                          "Skip": false,
+                                                          "Value": 0.2,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "SimplexNoise2D",
+                                                              "Skip": false,
+                                                              "Lacunarity": 4,
+                                                              "Persistence": 1.2,
+                                                              "Octaves": 2,
+                                                              "Scale": 65,
+                                                              "Seed": "PlateauNoise"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "Type": "CurveMapper",
+                                                      "Skip": false,
+                                                      "Curve": {
+                                                        "Type": "Manual",
+                                                        "Points": [
+                                                          {
+                                                            "In": 40,
+                                                            "Out": 1
+                                                          },
+                                                          {
+                                                            "In": 65,
+                                                            "Out": -1
+                                                          }
+                                                        ]
+                                                      },
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "BaseHeight",
+                                                          "Skip": false,
+                                                          "BaseHeightName": "Base",
+                                                          "Distance": true
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Type": "Multiplier",
+                                      "Skip": false,
+                                      "Inputs": [
+                                        {
+                                          "Type": "Constant",
+                                          "Skip": false,
+                                          "Value": 0.5
+                                        },
+                                        {
+                                          "Type": "Min",
+                                          "Skip": false,
+                                          "Inputs": [
+                                            {
+                                              "Type": "Sum",
+                                              "Skip": false,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "YOverride",
+                                                  "Skip": false,
+                                                  "Value": 1,
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "Cache",
+                                                      "Skip": false,
+                                                      "Capacity": 1,
+                                                      "Inputs": [
+                                                        {
+                                                          "Type": "Inverter",
+                                                          "Skip": false,
+                                                          "Inputs": [
+                                                            {
+                                                              "Type": "PositionsCellNoise",
+                                                              "Skip": false,
+                                                              "MaxDistance": 100,
+                                                              "Positions": {
+                                                                "Type": "Mesh2D",
+                                                                "Skip": false,
+                                                                "PointsY": 0,
+                                                                "PointGenerator": {
+                                                                  "Type": "Mesh",
+                                                                  "Skip": false,
+                                                                  "Jitter": 0.5,
+                                                                  "ScaleX": 40,
+                                                                  "ScaleY": 40,
+                                                                  "ScaleZ": 40,
+                                                                  "Seed": "SmallPlateaus"
+                                                                }
+                                                              },
+                                                              "ReturnType": {
+                                                                "Type": "Distance2Div"
+                                                              },
+                                                              "DistanceFunction": {
+                                                                "Type": "Euclidean"
+                                                              }
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "Type": "CurveMapper",
+                                                  "Skip": false,
+                                                  "Curve": {
+                                                    "Type": "Manual",
+                                                    "Points": [
+                                                      {
+                                                        "In": 0,
+                                                        "Out": 0.32
+                                                      },
+                                                      {
+                                                        "In": 50,
+                                                        "Out": 0.29
+                                                      },
+                                                      {
+                                                        "In": 65,
+                                                        "Out": -1
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "BaseHeight",
+                                                      "Skip": false,
+                                                      "BaseHeightName": "Base",
+                                                      "Distance": true
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "Type": "Sum",
+                                              "Skip": false,
+                                              "Inputs": [
+                                                {
+                                                  "Type": "Imported",
+                                                  "Skip": false,
+                                                  "Name": "AS_Plains1-Gorges-Base-Noise"
+                                                },
+                                                {
+                                                  "Type": "CurveMapper",
+                                                  "Skip": false,
+                                                  "Curve": {
+                                                    "Type": "Manual",
+                                                    "Points": [
+                                                      {
+                                                        "In": 0,
+                                                        "Out": 0.35
+                                                      },
+                                                      {
+                                                        "In": 40,
+                                                        "Out": 0.3
+                                                      },
+                                                      {
+                                                        "In": 65,
+                                                        "Out": -1
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Inputs": [
+                                                    {
+                                                      "Type": "BaseHeight",
+                                                      "Skip": false,
+                                                      "BaseHeightName": "Base",
+                                                      "Distance": true
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "Type": "Normalizer",
+                              "Skip": false,
+                              "FromMin": -0.5,
+                              "FromMax": 1,
+                              "ToMin": 0,
+                              "ToMax": 1.25,
+                              "Inputs": [
+                                {
+                                  "Type": "Sum",
+                                  "Skip": false,
+                                  "Inputs": [
+                                    {
+                                      "Type": "Imported",
+                                      "Skip": false,
+                                      "Name": "AS_Plains1-Gorges-LargeHills-Noise"
+                                    },
+                                    {
+                                      "Type": "Imported",
+                                      "Skip": false,
+                                      "Name": "AS_Plains1-Gorges-Base-Noise"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "CurveMapper",
+                          "Skip": false,
+                          "Curve": {
+                            "Type": "Manual",
+                            "Points": [
+                              {
+                                "In": 0,
+                                "Out": 1
+                              },
+                              {
+                                "In": 0.1,
+                                "Out": -1
+                              }
+                            ]
+                          },
+                          "Inputs": [
+                            {
+                              "Type": "BaseHeight",
+                              "Skip": false,
+                              "BaseHeightName": "Base",
+                              "Distance": true
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "CurveMapper",
+                          "Skip": false,
+                          "Curve": {
+                            "Type": "Manual",
+                            "Points": [
+                              {
+                                "In": -20,
+                                "Out": 1
+                              },
+                              {
+                                "In": -10,
+                                "Out": 0
+                              },
+                              {
+                                "In": 70,
+                                "Out": 0
+                              },
+                              {
+                                "In": 80,
+                                "Out": 1
+                              }
+                            ]
+                          },
+                          "Inputs": [
+                            {
+                              "Type": "BaseHeight",
+                              "Skip": false,
+                              "BaseHeightName": "Base",
+                              "Distance": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Type": "Constant",
+              "Skip": false,
+              "Value": 0.8
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "MaterialProvider": {
+    "Type": "Solidity",
+    "Solid": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "SimpleHorizontal",
+          "TopY": 1,
+          "TopBaseHeight": "Bedrock",
+          "BottomY": 0,
+          "BottomBaseHeight": "Bedrock",
+          "Material": {
+            "Type": "Constant",
+            "Material": {
+              "Solid": "Rock_Bedrock"
+            }
+          }
+        },
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Rock_Sandstone"
+          }
+        }
+      ]
+    },
+    "Empty": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Empty"
+          }
+        }
+      ]
+    }
+  },
+  "EnvironmentProvider": {
+    "Type": "Constant",
+    "Environment": "Env_Arrakis"
+  },
+  "Props": []
+}

@@ -1,0 +1,403 @@
+{
+  "Name": "AS_Generaitve_Boulders_Sandstone",
+  "Terrain": {
+    "Type": "DAOTerrain",
+    "Density": {
+      "Type": "Max",
+      "Skip": false,
+      "Inputs": [
+        {
+          "Type": "PositionsCellNoise",
+          "Skip": false,
+          "MaxDistance": 20,
+          "Positions": {
+            "Type": "Mesh2D",
+            "Skip": false,
+            "PointsY": 125,
+            "PointGenerator": {
+              "Type": "Mesh",
+              "Jitter": 0,
+              "ScaleX": 60,
+              "ScaleY": 60,
+              "ScaleZ": 60,
+              "Seed": "A"
+            }
+          },
+          "ReturnType": {
+            "Type": "Density",
+            "ChoiceDensity": {
+              "Type": "Constant",
+              "Skip": false,
+              "Value": 0
+            },
+            "Delimiters": [
+              {
+                "From": -1,
+                "To": 1,
+                "Density": {
+                  "Type": "Sum",
+                  "Skip": false,
+                  "Inputs": [
+                    {
+                      "Type": "Normalizer",
+                      "Skip": false,
+                      "FromMin": -1,
+                      "FromMax": 1,
+                      "ToMin": -0.6,
+                      "ToMax": 0.6,
+                      "Inputs": [
+                        {
+                          "Type": "Anchor",
+                          "Skip": false,
+                          "Reversed": false,
+                          "Inputs": [
+                            {
+                              "Type": "Distance",
+                              "Skip": false,
+                              "Curve": {
+                                "Type": "Manual",
+                                "Points": [
+                                  {
+                                    "In": 0,
+                                    "Out": 1
+                                  },
+                                  {
+                                    "In": 7,
+                                    "Out": -1
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Type": "Normalizer",
+                      "Skip": false,
+                      "FromMin": -1,
+                      "FromMax": 1,
+                      "ToMin": -0.3,
+                      "ToMax": 0.3,
+                      "Inputs": [
+                        {
+                          "Type": "Anchor",
+                          "Skip": false,
+                          "Reversed": false,
+                          "Inputs": [
+                            {
+                              "Type": "Rotator",
+                              "Skip": false,
+                              "SpinAngle": 0,
+                              "NewYAxis": {
+                                "X": 0.3,
+                                "Y": 1,
+                                "Z": 0.3
+                              },
+                              "Inputs": [
+                                {
+                                  "Type": "Cuboid",
+                                  "Skip": false,
+                                  "Spin": 0,
+                                  "Curve": {
+                                    "Type": "Manual",
+                                    "Points": [
+                                      {
+                                        "In": 0,
+                                        "Out": 1
+                                      },
+                                      {
+                                        "In": 7,
+                                        "Out": -1
+                                      }
+                                    ]
+                                  },
+                                  "Scale": {
+                                    "X": 1,
+                                    "Y": 0.4,
+                                    "Z": 1
+                                  },
+                                  "NewYAxis": {
+                                    "X": 0,
+                                    "Y": 1,
+                                    "Z": 0
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Type": "Normalizer",
+                      "Skip": false,
+                      "FromMin": -1,
+                      "FromMax": 1,
+                      "ToMin": -0.1,
+                      "ToMax": 0.1,
+                      "Inputs": [
+                        {
+                          "Type": "SimplexNoise3D",
+                          "Skip": false,
+                          "Lacunarity": 2,
+                          "Persistence": 0.5,
+                          "Octaves": 1,
+                          "ScaleXZ": 10,
+                          "ScaleY": 10,
+                          "Seed": "A"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "DefaultValue": 0
+          },
+          "DistanceFunction": {
+            "Type": "Euclidean"
+          }
+        },
+        {
+          "Type": "Mix",
+          "Skip": false,
+          "Inputs": [
+            {
+              "Type": "PositionsCellNoise",
+              "Skip": false,
+              "MaxDistance": 20,
+              "Positions": {
+                "Type": "Mesh2D",
+                "Skip": false,
+                "PointsY": 100,
+                "PointGenerator": {
+                  "Type": "Mesh",
+                  "Jitter": 0,
+                  "ScaleX": 60,
+                  "ScaleY": 60,
+                  "ScaleZ": 60,
+                  "Seed": "A"
+                }
+              },
+              "ReturnType": {
+                "Type": "Density",
+                "ChoiceDensity": {
+                  "Type": "Constant",
+                  "Skip": false,
+                  "Value": 0
+                },
+                "Delimiters": [
+                  {
+                    "From": -1,
+                    "To": 1,
+                    "Density": {
+                      "Type": "Sum",
+                      "Skip": false,
+                      "Inputs": [
+                        {
+                          "Type": "Normalizer",
+                          "Skip": false,
+                          "FromMin": -1,
+                          "FromMax": 1,
+                          "ToMin": -0.6,
+                          "ToMax": 0.6,
+                          "Inputs": [
+                            {
+                              "Type": "Anchor",
+                              "Skip": false,
+                              "Reversed": false,
+                              "Inputs": [
+                                {
+                                  "Type": "Distance",
+                                  "Skip": false,
+                                  "Curve": {
+                                    "Type": "Manual",
+                                    "Points": [
+                                      {
+                                        "In": 0,
+                                        "Out": 1
+                                      },
+                                      {
+                                        "In": 10,
+                                        "Out": -1
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "Normalizer",
+                          "Skip": false,
+                          "FromMin": -1,
+                          "FromMax": 1,
+                          "ToMin": -0.3,
+                          "ToMax": 0.3,
+                          "Inputs": [
+                            {
+                              "Type": "Anchor",
+                              "Skip": false,
+                              "Reversed": false,
+                              "Inputs": [
+                                {
+                                  "Type": "Rotator",
+                                  "Skip": false,
+                                  "SpinAngle": 0,
+                                  "NewYAxis": {
+                                    "X": 0.3,
+                                    "Y": 1,
+                                    "Z": 0.3
+                                  },
+                                  "Inputs": [
+                                    {
+                                      "Type": "Cuboid",
+                                      "Skip": false,
+                                      "Spin": 0,
+                                      "Curve": {
+                                        "Type": "Manual",
+                                        "Points": [
+                                          {
+                                            "In": 0,
+                                            "Out": 1
+                                          },
+                                          {
+                                            "In": 10,
+                                            "Out": -1
+                                          }
+                                        ]
+                                      },
+                                      "Scale": {
+                                        "X": 1,
+                                        "Y": 0.3,
+                                        "Z": 1
+                                      },
+                                      "NewYAxis": {
+                                        "X": 0,
+                                        "Y": 1,
+                                        "Z": 0
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "Normalizer",
+                          "Skip": false,
+                          "FromMin": -1,
+                          "FromMax": 1,
+                          "ToMin": -0.1,
+                          "ToMax": 0.1,
+                          "Inputs": [
+                            {
+                              "Type": "SimplexNoise3D",
+                              "Skip": false,
+                              "Lacunarity": 2,
+                              "Persistence": 0.5,
+                              "Octaves": 1,
+                              "ScaleXZ": 10,
+                              "ScaleY": 10,
+                              "Seed": "A"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "DefaultValue": 0
+              },
+              "DistanceFunction": {
+                "Type": "Euclidean"
+              }
+            },
+            {
+              "Type": "Constant",
+              "Skip": false,
+              "Value": -1
+            },
+            {
+              "Type": "CurveMapper",
+              "Skip": false,
+              "Curve": {
+                "Type": "Manual",
+                "Points": [
+                  {
+                    "In": 97,
+                    "Out": 1
+                  },
+                  {
+                    "In": 98,
+                    "Out": 0
+                  },
+                  {
+                    "In": 102,
+                    "Out": 0
+                  },
+                  {
+                    "In": 103,
+                    "Out": 1
+                  }
+                ]
+              },
+              "Inputs": [
+                {
+                  "Type": "YValue",
+                  "Skip": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "MaterialProvider": {
+    "Type": "Solidity",
+    "Solid": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "SimpleHorizontal",
+          "TopY": 1,
+          "TopBaseHeight": "Bedrock",
+          "BottomY": 0,
+          "BottomBaseHeight": "Bedrock",
+          "Material": {
+            "Type": "Constant",
+            "Material": {
+              "Solid": "Rock_Bedrock"
+            }
+          }
+        },
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Rock_Sandstone"
+          }
+        }
+      ]
+    },
+    "Empty": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Empty"
+          }
+        }
+      ]
+    }
+  },
+  "EnvironmentProvider": {
+    "Type": "Constant",
+    "Environment": "Env_Arrakis"
+  },
+  "Props": []
+}

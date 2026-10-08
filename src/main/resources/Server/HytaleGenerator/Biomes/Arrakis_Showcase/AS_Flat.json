@@ -1,0 +1,74 @@
+{
+  "Name": "AS_Flat",
+  "Terrain": {
+    "Type": "DAOTerrain",
+    "Density": {
+      "Type": "CurveMapper",
+      "Skip": false,
+      "Curve": {
+        "Type": "Manual",
+        "Points": [
+          {
+            "In": -5,
+            "Out": 2
+          },
+          {
+            "In": 5,
+            "Out": -2
+          }
+        ]
+      },
+      "Inputs": [
+        {
+          "Type": "BaseHeight",
+          "BaseHeightName": "Base",
+          "Distance": true,
+          "Skip": false
+        }
+      ]
+    }
+  },
+  "MaterialProvider": {
+    "Type": "Solidity",
+    "Solid": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "SimpleHorizontal",
+          "TopY": 1,
+          "TopBaseHeight": "Bedrock",
+          "BottomY": 0,
+          "BottomBaseHeight": "Bedrock",
+          "Material": {
+            "Type": "Constant",
+            "Material": {
+              "Solid": "Rock_Bedrock"
+            }
+          }
+        },
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Soil_Sand_White"
+          }
+        }
+      ]
+    },
+    "Empty": {
+      "Type": "Queue",
+      "Queue": [
+        {
+          "Type": "Constant",
+          "Material": {
+            "Solid": "Empty"
+          }
+        }
+      ]
+    }
+  },
+  "EnvironmentProvider": {
+    "Type": "Constant",
+    "Environment": "Env_Arrakis"
+  },
+  "Props": []
+}
