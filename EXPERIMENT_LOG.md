@@ -1,4 +1,51 @@
-# Arrakis rock islands — experiment log
+# IslandCraft - Dunes of Arrakis
+
+## Naming convention
+
+- Family name `IslandCraft - <mod name>`; manifest group `IslandCraft`.
+- Identifier form `<Mod_Name_With_Underscores>` (here `Dunes_of_Arrakis`) for generator types, world structures and the mod's asset folders.
+- Code form `<ModNameNoSpaces>` (here `DunesOfArrakis`); package `com.paulorchard.islandcraft.<modnamelowercase>`; jar and repository `IslandCraft-<ModNameNoSpaces>`.
+- In-world content is prefixed `Arrakis_` (blocks, biomes, exported densities); environments are `Env_Arrakis...`; no abbreviated asset prefixes.
+- Seed keys are not asset IDs. They are left as first written, because renaming one changes the terrain.
+- Projects live under `C:\Apps\IslandCraft\`.
+
+Entries further down are left as written and use the old names. Look them up in the table below.
+
+## Rename table (commit 973ff2f)
+
+| Old | New | Where |
+| --- | --- | --- |
+| Manifest Group `Arrakis` | `IslandCraft` | `manifest.json` |
+| Manifest Name `Arrakis` | `IslandCraft - Dunes of Arrakis` | `manifest.json` |
+| Mod identifier `Arrakis:Arrakis` | `IslandCraft:IslandCraft - Dunes of Arrakis` | logs, save configs |
+| Generator type `Arrakis` | `Dunes_of_Arrakis` | provider class, each world's config |
+| World structure `Arrakis` | `Dunes_of_Arrakis` | `WorldStructures/Dunes_of_Arrakis.json`, provider default, preview tools |
+| World structures `Arrakis_Mix`, `Arrakis_Showcase` | deleted | were in `WorldStructures/` |
+| Biomes `AM_*` (12), `AS_*` (13) and their exports | deleted | were in `Biomes/Arrakis_Mix/`, `Biomes/Arrakis_Showcase/` |
+| `tools/showcase/` | deleted | build scripts, `Use-Showcase.ps1`, two images |
+| Exports `ArrakisV1` .. `ArrakisV10` | `Arrakis_V1` .. `Arrakis_V10` | main biome, `graph.js` |
+| Exports `ArrakisV<n><letter>_...` | `Arrakis_V<n><letter>_...` | main biome, `graph.js` |
+| Exports with an empty name (copied from vanilla recipes) | `Arrakis_V<n><letter>_Unnamed<k>` | main biome, `graph.js` |
+| Folder `Biomes/Arrakis/` | `Biomes/Dunes_of_Arrakis/` | assets |
+| Folder `Environments/Arrakis/` | `Environments/Dunes_of_Arrakis/` | assets |
+| `Env_Arrakis` had no tags | tag `Arrakis` added | `Env_Arrakis.json` |
+| Package `com.paulorchard.arrakis` | `com.paulorchard.islandcraft.dunesofarrakis` | Java |
+| `ArrakisPlugin`, `ArrakisWorldGenProvider`, `ArrakisWorldGen`, `ArrakisSpawnProvider` | `DunesOfArrakisPlugin`, `DunesOfArrakisWorldGenProvider`, `DunesOfArrakisWorldGen`, `DunesOfArrakisSpawnProvider` | Java |
+| Gradle group `com.paulorchard` | `com.paulorchard.islandcraft` | `build.gradle.kts` |
+| Project name `DuneCraft-WorldGen` | `IslandCraft-DunesOfArrakis` | `settings.gradle.kts` |
+| Jar `Arrakis-0.1.0.jar` | `IslandCraft-DunesOfArrakis-0.1.0.jar` | `build.gradle.kts`; the deploy task also removes old `Arrakis-*` files |
+
+Unchanged: `Arrakis_Sand`, `Arrakis_Terrain`, `Env_Arrakis`, the exports `Arrakis_Rock`, `Arrakis_Pick`, `Arrakis_Pick_Start` and `Arrakis_Inside`, the language key `items.Arrakis_Sand.name`, every seed key (34 start with `Arrakis_`; 9 are `ArrakisV<n>_Patch<k>`; 23 are copied from vanilla recipes), and the vanilla export `Plains1_Caves_Terrain` that the rock recipes import.
+
+Checked after the rename:
+
+- Two real-generator renders (seed 42 round spawn; seed 1791463709213 at 6 km north) are byte-identical to renders made before it.
+- Clean build and deploy: one jar for this mod in the Mods folder.
+- Three "Duplicate export name" warnings remain. They come from the vanilla Gorges recipe using one export name twice.
+
+Not yet checked in game: the mod-list name. It was chosen from the client's list template (`ModItem.ui`), which has a name label and an authors label and no group label, so the name alone has to carry "IslandCraft - ". Also unchecked: how worlds made before the rename fail to load.
+
+# Experiment log (entries use the old names)
 
 Biome file: `src/main/resources/Server/HytaleGenerator/Biomes/Arrakis/Arrakis_Terrain.json`
 Server version: 0.6.8
