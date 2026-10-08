@@ -3643,7 +3643,7 @@
               "From": 0,
               "To": 100,
               "Material": {
-                "$Comment": "Sand level is Base. Rock from 3 blocks below Base upwards is white sandstone; deeper rock is red sandstone.",
+                "$Comment": "Sand level is Base. Rock from 3 blocks below Base upwards is sandstone; deeper rock is red sandstone.",
                 "Type": "Queue",
                 "Queue": [
                   {
@@ -3655,7 +3655,7 @@
                     "Material": {
                       "Type": "Constant",
                       "Material": {
-                        "Solid": "Rock_Sandstone_White"
+                        "Solid": "Rock_Sandstone"
                       }
                     }
                   },

@@ -398,6 +398,15 @@ Against the play requirements: starts on rock (yes), fixed pad height (yes), two
 
 Feedback: _pending_
 
+# Reset to the round 5 state
+
+Rounds 6-8 (cave networks and entrances, softened terrace profile, alcoves) were set aside. That work, with its log entries and the preview tool's cave, face and pocket surveys, is on the local branch `caves-experiment` (commit 46bd112). `main` went back to commit 2d58ca6 so caves and openings can be approached differently.
+
+Two fixes made on top of that state (world "Arrakis V1", log clean, no `Took too long`):
+
+- Materials: the upper rock block is `Rock_Sandstone` again instead of `Rock_Sandstone_White`. The sand-level rule is otherwise unchanged (`Rock_Sandstone` from 3 blocks below Base upwards, `Rock_Sandstone_Red` deeper).
+- Spawn bug: players were appearing at (0, 140, 0), 50 blocks above the landing pad, and had been since round 5. Cause: the generator takes spawn points from a top-level `SpawnPositions` key in the world structure (vanilla: `"SpawnPositions": { "Type": "Imported", "Name": "Spawns" }`). Ours only had the framework `Positions` entry named "Spawns", which nothing reads on its own. With no spawn positions, `Handle.getSpawnPoints` falls back to a hard-coded (0, 140, 0); the server log shows "joined world 'default' at location (0, 140, 0)". Fix: added `"SpawnPositions": { "Type": "List", "Positions": [{ "X": 0.5, "Y": 91, "Z": 0.5 }] }` inline (not imported, because vanilla also exports the name "Spawns"). `write.js` now writes it too. Not yet confirmed in game.
+
 ## Dead ends
 
 - Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).

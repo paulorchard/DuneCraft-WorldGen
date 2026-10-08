@@ -8,6 +8,16 @@
     "Type": "Constant",
     "Value": 0
   },
+  "SpawnPositions": {
+    "Type": "List",
+    "Positions": [
+      {
+        "X": 0.5,
+        "Y": 91,
+        "Z": 0.5
+      }
+    ]
+  },
   "Framework": [
     {
       "Type": "DecimalConstants",
