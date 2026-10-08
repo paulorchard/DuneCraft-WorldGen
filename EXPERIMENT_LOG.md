@@ -816,6 +816,36 @@ Other checks: pad top block Y 90 on three seeds, sand reachable in eight, eight 
 - Outcrop chains are still placed by distance from a centre, so Huge land masses have almost no chain.
 - Generation time in the north is unmeasured.
 
+## Land masses accepted; spawn terrain removed
+
+World "Arrakis v20" (seed 1791436655886): placement accepted as "perfect". A 10 km by 50 km map of that seed was rendered at 5 blocks per pixel (`tools/preview/arrakis-v20-map-10km-x-50km.png`, not committed, 18 MB). Rock share by band on that seed: 25-15 km north 10.7%, 15-5 km north 11.5%, 5 km north to 5 km south 6.8%, 5-15 km south 2.2%, 15-25 km south 0.0%. Log clean; about 27 ms per chunk over 1000 chunks round spawn.
+
+Request: remove the "sphere" generated under spawn (the round mound or bowl from the landing-pad cones); an island nearby is enough, players may spawn on sand. And can spawn height be dynamic, at the first solid block, so new players take no fall damage?
+
+Status: deployed, spawn area rendered with the real-generator preview. The spawn height itself can only be confirmed in game.
+
+### Dynamic spawn height
+
+From the 0.6.8 jar: when a world has no spawn provider of its own, `IWorldGen.getDefaultSpawnProvider` returns `FitToHeightMapSpawnProvider(IndividualSpawnProvider(spawn points from the world structure))`. `FitToHeightMap.getSpawnPoint` takes the point and, if its Y is below 0 and the chunk at that column is available (`World.getNonTickingChunk`), sets Y to `chunk.getHeight(x, z) + 1`. A Y of 0 or more is used as given, which is why the fixed spawn Y values never moved.
+
+So spawn is now (0.5, -1, 0.5) in both `SpawnPositions` and the framework entry. Not verified: whether `getNonTickingChunk` always has the spawn chunk at that moment. If it ever returns nothing the point keeps Y = -1 and the player would start below the world.
+
+### Removed
+
+`start.enabled: false` in `graph.js` switches off, together: the starting island and its variant pick, the two landing-pad cones, the 30 m clearing of other rock round the origin, and the dune fade at spawn (the dune branch is back to the plain clamped noise). The guaranteed island 500 m north-east stays. The stepping-stone rule for small outcrops near spawn and the "no medium cells within 350 m of spawn" rule were left as they are.
+
+## Spawn snap confirmed; starting island back, without the pad
+
+World "Arrakis v21" (seed 1791438024806): with spawn Y = -1 the player joined at (0.5, 95, 0.5), i.e. the game fitted the spawn point to the surface. Confirms the reading of `FitToHeightMapSpawnProvider`. Log clean; about 16 ms per chunk round spawn (less rock there without the starting island).
+
+Feedback: bring the starting island back, but not the landing pad; the island that generated round spawn was good, and with the snap-to-surface rule it should be fine for most spawns.
+
+Change: `start.island: true`, `start.enabled: false`. The starting island (footprint radius 100 m at the origin, its own variant pick, recipe lowered 30 blocks) is back as one more rock body. Still off: the landing-pad cones, the 30 m clearing round the origin, and the dune clearing. Spawn stays (0.5, -1, 0.5).
+
+Preview, 500 m round spawn: seed 1791436655886 has 4.1 ha of rock with its top up to 58 m above sand level; seed 42 has 2.7 ha, up to 87 m; seed 7 has 1.0 ha, up to 60 m. So how much island there is at spawn varies a lot with the variant drawn, and the player lands on top of whatever is at the origin, rock or dune.
+
+Not checked: whether the surface block at the origin can be a spot the player cannot leave without a fall (the top of a spire, or a pit).
+
 ## Dead ends
 
 - Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).

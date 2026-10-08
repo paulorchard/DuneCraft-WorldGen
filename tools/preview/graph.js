@@ -70,7 +70,7 @@ function makeRock(P) {
   // Dune fade at spawn. The clamped dune noise n (-1 = no dune) is scaled towards -1: n' = (n + 1) * t - 1,
   // with t = 0 near the origin and exactly 1 from duneFadeEnd outwards, so dunes beyond that are unchanged.
   // Scaling shrinks each dune in place; clipping against a cone (first attempt) left a visible circular scarp.
-  const duneNoise = () => node('Sum', [c(-1), node('Multiplier', [
+  const duneNoise = () => !S.enabled ? node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }) : node('Sum', [c(-1), node('Multiplier', [
     node('Sum', [node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }), c(1)]),
     node('CurveMapper', [node('Sum', [
       dist0([[0, 0], [2000, 2000]], 'Distance from the origin in metres.'),
@@ -245,7 +245,8 @@ function makeRock(P) {
     // Distance measures from the world origin in 3D. These uses are evaluated per voxel, so the height has to be zeroed first.
     const flatDist = (pts, comment) => node('YOverride', [dist0(pts)], { Value: 0 }, comment);
     // Footprint fields, all "1 at the centre, 0 at the shore".
-    const fields = { large: masses.length ? regularF : F, medium: outcropLayersAll[0], small: outcropLayersAll[1], start: startF() };
+    const fields = { large: masses.length ? regularF : F, medium: outcropLayersAll[0], small: outcropLayersAll[1] };
+    if (S.enabled || S.island) fields.start = startF();
     // Land masses are a class of their own so they can be lowered less than regular islands and stay solid.
     if (masses.length) fields.mass = node('Max', masses.map(x => x.field), null, 'All land-mass fields.');
     // What the recipes are told in place of DistanceToBiomeEdge: how far inside its island or outcrop a column is, on the scale of a full-size island.
@@ -319,9 +320,12 @@ function makeRock(P) {
         `Root: no rock at any depth in columns where the recipe is not solid ${V.rootDepth} blocks below sand level.`)
     ]), step01(node('Sum', [cache2d(copyNode(field)), c(0.012)]), '1 inside a ' + name + ' footprint.')], null, `${name}: picked variant lowered ${cls.sink} blocks, inside its footprints only.`);
 
-    const others = node('Min', [
-      node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]
-        .concat(fields.mass ? [body('Land mass', fields.mass, V.mass, islandPick)] : [])),
+    const bodies = () => node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]
+        .concat(fields.mass ? [body('Land mass', fields.mass, V.mass, islandPick)] : []));
+    if (!S.enabled) return { A: null, B: null, duneHeight, duneNoise, UNIT, rock: { $Comment: 'Rock: > 0 is rock. Vanilla terrain recipes inside our island and outcrop footprints.', Type: 'Exported', ExportAs: 'Arrakis_Rock', SingleInstance: true, Skip: false,
+      Inputs: [node('Sum', [S.island ? node('Max', [bodies(), body('Starting island', fields.start, V.start, startPick)], null, 'Everything, plus a starting island at the origin with its own variant pick. No landing pad: the game snaps spawn to the surface.') : bodies(),
+        node('Multiplier', [c(0), insideDefinition], null, 'Holds the definition of Arrakis_Inside; adds exactly 0.')])] } };
+    const others = node('Min', [bodies(),
       flatDist([[S.othersClear, -5], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the landing pad.`)
     ]);
     // Starting island at the origin with a landing pad. Two cones hold the ground near the pad: nothing below the lower one, nothing above
@@ -384,7 +388,9 @@ const PARAMS = {
   // Rock more than this many metres below the sand surface height field is removed, so roots go straight down.
   rootCut: 4,
   guaranteedIsland: { x: 640, z: -480, clear: 1200 },
-  start: { radius: 100, lobeAmp: 0.3, lobeScale: 75, edgeMetres: 30, capCurve: [[-1, 6], [0, 10], [1, 15]],
+  // Spawn terrain (starting island, landing pad, dune clearing) is switched off: players spawn on whatever is at the origin.
+  // island: a starting island at the origin (kept). enabled: the landing pad, the clearing round it and the dune clearing (off).
+  start: { enabled: false, island: true, radius: 100, lobeAmp: 0.3, lobeScale: 75, edgeMetres: 30, capCurve: [[-1, 6], [0, 10], [1, 15]],
     lookoutScale: 110, lookoutFrom: 0.3, lookoutExtra: 20,
     padRadius: 16, padHeight: 10, padBlendEnd: 45, othersClear: 30, duneFadeStart: 120, duneFadeEnd: 320, duneFadeWobble: 45 },
   island: {
