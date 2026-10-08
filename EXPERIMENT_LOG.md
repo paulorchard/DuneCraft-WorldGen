@@ -765,6 +765,57 @@ Other checks: pad top block Y 90 and sand reachable in all eight directions (unc
 - Belt islands and regular islands can overlap where both exist; they then have different variants and the rock changes along the line between their centres.
 - Generation time in the belt is unmeasured and will be higher: rock chunks cost about twice sand chunks.
 
+## Islands by latitude, second pass: mixed-size land masses
+
+Feedback on the belt: a sketch drawn over the preview series (`tools/preview/Suggested Island spacing and size by Z axis.png`). Read from it, each panel being 10 km across:
+
+- North (20 km to 5 km north): large, medium and small islands mixed at every latitude, placed irregularly, no rows. A few very large ovals of about 4-5 km by 2-2.5 km, many of 1.5-2.5 km by 1 km, smaller ones of 0.5-1 km, and scattered dots.
+- Spawn and south: a couple of 1.5 km ovals near spawn, one of about 2 km at 5 km south, only 1 km ovals and dots at 10 km south, one 1.5-2 km outline and dots at 20 km south.
+
+Answers: each outline is a solid land mass with sand channels and bays; north of 20 km it thins out to the same as the far south; all the sizes read off the sketch are to be halved, so the island at spawn stays 400-700 m; the dots are free-standing outcrops, several small ones or one or two medium ones.
+
+Status: deployed, rendered with the real-generator preview on seed 1791432644696. Not yet seen in game.
+
+### What replaced the belt
+
+The single belt grid is gone. Land masses now come from sub-grids: each size class has two sparse grids offset from each other, with jitter, and a keep-chance by latitude. Two sparse offset grids look irregular together and can sit side by side or overlap, while each grid's cells stay large enough that no land mass is ever cut at a cell boundary. The island field is the `Max` of the regular island field and every sub-grid's field.
+
+| Class | Sub-grid cell | Sizes (east-west x north-south) | Keep-chance |
+| --- | --- | --- | --- |
+| Regular island | 2500 m grid | about 600 m | 0.1 beyond 27 km north, 0.6-0.7 from 21 km north to 3 km south, 0.3 at 12 km south, 0.1 from 20 km south |
+| Large | 2800 x 1900 m, two grids | 750 x 500 to 1250 x 640 m, turned -35 to +25 degrees | 0.05 beyond 27 km north, 0.45-0.5 from 21 km to 5 km north, 0.12 round spawn, 0.07 at 12 km south, 0.05 from 20 km south |
+| Huge | 5500 x 3500 m, two grids | 2000 x 1000 to 2500 x 1240 m, turned -10 to +20 degrees | 0 beyond 22 km north, 0.35 at 17 km, 0.5 at 12 km, 0.45 at 6 km, 0 from 3 km north southwards |
+
+- Each land mass is one anchored `Ellipsoid` (size and turn picked per land mass by white noise) plus broad lobes and bays at its own scale (Large: scales 300 and 90; Huge: 600 and 170).
+- Land masses are a rock class of their own, lowered 8 blocks instead of 20, so they stay solid. First render with them at 20 was full of sand holes on most variants.
+- Free-standing outcrops everywhere: 3% of medium cells and 0.4% of small cells fill on their own whatever the island distance (replaces the south-only rule).
+- Variant pick, one per land mass: regular islands and their chains use the nearest regular centre within 1200 m (a lone outcrop picks for itself); then each land-mass sub-grid claims its own footprint plus a margin, larger classes overriding smaller ones.
+
+### Preview, 10 km views down the centre line
+
+| Centre | Rock share |
+| --- | --- |
+| 25 km north | 2.0% |
+| 15 km north | 13.0% |
+| 10 km north | 17.3% |
+| 5 km north | 14.6% |
+| spawn | 5.9% |
+| 5 km south | 4.5% |
+| 10 km south | 2.3% |
+| 20 km south | 2.1% |
+
+Images: `latitude-series-v2.png`, and `latitude-landmass-zoom-v2.png` (one Huge land mass about 3 km by 1.3 km, solid, with bays; underground 1.04 x at Y = 40 and 1.10 x at Y = 10 in that 3.6 km view).
+
+Other checks: pad top block Y 90 on three seeds, sand reachable in eight, eight and six of eight directions; 0 sand columns painted as rock. Biome file about 3.4 MB.
+
+### Differences from the request, and limits
+
+- Rock round spawn went up (5.9% of the 10 km view against 1.9% before), because Large land masses now exist round spawn at a 12% chance per cell.
+- The series has no view at 20 km north; the thinning there is by the curves (regular 0.6 at 21 km falling to 0.1 at 27 km; Large 0.45 to 0.05; Huge 0 by 22 km), so the north is still fairly busy at 20 km and thin by 25-27 km.
+- Where two land masses overlap they join smoothly in shape, but the smaller class's variant is overridden only inside the larger one's margin; a change of rock along the join is still possible.
+- Outcrop chains are still placed by distance from a centre, so Huge land masses have almost no chain.
+- Generation time in the north is unmeasured.
+
 ## Dead ends
 
 - Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).

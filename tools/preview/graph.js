@@ -42,12 +42,16 @@ function makeRock(P) {
         PointGenerator: { Type: 'Mesh', Jitter: 0.2, ScaleX: 2500, ScaleY: 2500, ScaleZ: 2500, Seed: 'Arrakis_Islands' } }
     }
   };
-  const beltIslands = T && {
-    $Comment: 'Belt islands: large east-west islands on a wide grid, present only in the northern belt.',
-    Type: 'Occurrence', Skip: false, Seed: 'Arrakis_Belt_Drop', FieldFunction: byLatitude(T.beltKeep, 'Chance that a belt island exists, by latitude.'),
-    Positions: { Type: 'Mesh2D', Skip: false, PointsY: 0,
-      PointGenerator: { Type: 'Mesh', Jitter: T.beltJitter, ScaleX: T.beltGridX, ScaleY: T.beltGridZ, ScaleZ: T.beltGridZ, Seed: 'Arrakis_Belt' } }
-  };
+  // Land masses: several sub-grids per size class, each sparse and offset from the others, so together they look irregular and can sit
+  // side by side or overlap. Each sub-grid's cells are big enough to hold its largest land mass, so none is ever cut at a cell boundary.
+  const masses = !T ? [] : T.masses.flatMap(M => M.offsets.map(([ox, oz], k) => {
+    const tag = M.name + (k + 1);
+    const positions = { $Comment: `${M.name} land masses, sub-grid ${k + 1}.`, Type: 'Offset', Skip: false, OffsetX: ox, OffsetY: 0, OffsetZ: oz,
+      Positions: { Type: 'Occurrence', Skip: false, Seed: 'Arrakis_Mass_Drop_' + tag, FieldFunction: byLatitude(M.keep, `Chance that a ${M.name} land mass exists, by latitude (north is -Z).`),
+        Positions: { Type: 'Mesh2D', Skip: false, PointsY: 0, PointGenerator: { Type: 'Mesh', Jitter: M.jitter, ScaleX: M.gridX, ScaleY: M.gridZ, ScaleZ: M.gridZ, Seed: 'Arrakis_Mass_' + tag } } } };
+    return { M, tag, positions };
+  }));
+  let regularIslandPositions;
   const islandPositions = P.previewIslandAt
     ? { Type: 'List', Skip: false, Positions: [{ X: P.previewIslandAt[0], Y: 0, Z: P.previewIslandAt[1] }] }
     : { $Comment: `Large island centres: one guaranteed island at (${G.x}, ${G.z}), plus the regular grid with every centre within ${G.clear} m of it removed.`,
@@ -58,7 +62,8 @@ function makeRock(P) {
               ReturnType: { Type: 'Curve', Curve: curve([[G.clear - 1, 0], [G.clear, 1]]) }, DistanceFunction: { Type: 'Euclidean' } },
             Delimiters: [{ Min: 0.5, Max: 2 }],
             Positions: gridIslands }
-        ].concat(beltIslands ? [beltIslands] : []) };
+        ].concat(masses.map(x => x.positions)) };
+  regularIslandPositions = P.previewIslandAt ? islandPositions : Object.assign({}, islandPositions, { Positions: islandPositions.Positions.slice(0, 2) });
 
   const S = P.start;
   // Same node the dune branch gets: the clamped dune noise, forced down to "no dune" near the origin.
@@ -88,19 +93,21 @@ function makeRock(P) {
     norm(-I.lobeAmp, I.lobeAmp, noise2d(I.lobeScale, 2, 'Arrakis_Islands_Lobes'), 'Lobes: breaks the mass into bays, peninsulas and detached pieces.'),
     norm(-I.detailAmp, I.detailAmp, noise2d(I.detailScale, 2, 'Arrakis_Islands_Coast'), 'Fine coastline detail.')];
   const regularF = node('Sum', fieldInputs, null, 'Regular island field: > 0 is rock.');
-  const beltF = T && node('Sum', [
-    { $Comment: 'Belt island footprint: an east-west ellipse per island. The size class comes from how deep in the belt the island centre is.',
-      Type: 'PositionsCellNoise', Skip: false, MaxDistance: 2 * Math.max(...T.beltSizes.map(s => s[0])) + 200, Positions: beltIslands,
-      ReturnType: { Type: 'Density', ChoiceDensity: byLatitude(T.beltStrength, 'Belt strength at the island centre: 0 at the edges of the belt, 1 at its core.'),
-        Delimiters: T.beltSizes.map(([halfEW, halfNS], i) => ({ From: i / T.beltSizes.length, To: i === T.beltSizes.length - 1 ? 1.01 : (i + 1) / T.beltSizes.length,
-          Density: node('Anchor', [{ Type: 'Ellipsoid', Skip: false, Spin: 0, Curve: curve([[0, 1], [1, 0], [2, -1]]), Scale: { X: halfEW, Y: 1, Z: halfNS }, NewYAxis: { X: 0, Y: 1, Z: 0 } }], { Reversed: false },
-            `Belt island about ${2 * halfEW} m east-west by ${2 * halfNS} m north-south.`) })), DefaultValue: -1 },
-      DistanceFunction: { Type: 'Euclidean' } },
-    norm(-T.beltLobeAmp, T.beltLobeAmp, noise2d(T.beltLobeScale, 2, 'Arrakis_Belt_Lobes'), 'Broad lobes: bays and sand channels at the scale of a belt island.'),
-    norm(-T.beltBayAmp, T.beltBayAmp, noise2d(T.beltBayScale, 2, 'Arrakis_Belt_Bays'), 'Smaller bays.'),
-    norm(-I.detailAmp, I.detailAmp, noise2d(I.detailScale, 2, 'Arrakis_Belt_Coast'), 'Fine coastline detail.')
-  ], null, 'Belt island field: > 0 is rock.');
-  const F = T ? node('Max', [regularF, beltF], null, 'Island field F: > 0 is rock.') : regularF;
+  const massField = x => { const M = x.M, n = M.sizes.length;
+    return node('Sum', [
+      { $Comment: `${M.name} land-mass footprint: one ellipse per land mass; size and slant picked per land mass.`,
+        Type: 'PositionsCellNoise', Skip: false, MaxDistance: 2 * Math.max(...M.sizes.map(s => s[0])) + 200, Positions: x.positions,
+        ReturnType: { Type: 'Density', ChoiceDensity: { Type: 'WhiteNoise', Seed: 'Arrakis_Mass_Size_' + x.tag, Skip: false },
+          Delimiters: M.sizes.map(([halfEW, halfNS, spin], i) => ({ From: +(-1 + 2 * i / n).toFixed(4), To: i === n - 1 ? 1.01 : +(-1 + 2 * (i + 1) / n).toFixed(4),
+            Density: node('Anchor', [{ Type: 'Ellipsoid', Skip: false, Spin: spin, Curve: curve([[0, 1], [1, 0], [2, -1]]), Scale: { X: halfEW, Y: 1, Z: halfNS }, NewYAxis: { X: 0, Y: 1, Z: 0 } }], { Reversed: false },
+              `About ${2 * halfEW} m by ${2 * halfNS} m, turned ${spin} degrees.`) })), DefaultValue: -1 },
+        DistanceFunction: { Type: 'Euclidean' } },
+      norm(-M.lobeAmp, M.lobeAmp, noise2d(M.lobeScale, 2, 'Arrakis_Mass_Lobes_' + M.name), 'Broad lobes: bays and sand channels at the scale of the land mass.'),
+      norm(-M.bayAmp, M.bayAmp, noise2d(M.bayScale, 2, 'Arrakis_Mass_Bays_' + M.name), 'Smaller bays.'),
+      norm(-I.detailAmp, I.detailAmp, noise2d(I.detailScale, 2, 'Arrakis_Mass_Coast'), 'Fine coastline detail.')
+    ], null, `${M.name} land-mass field (sub-grid ${x.tag}): > 0 is rock.`); };
+  masses.forEach(x => { x.field = massField(x); });
+  const F = masses.length ? node('Max', [regularF, ...masses.map(x => x.field)], null, 'Island field F: > 0 is rock.') : regularF;
   const edge = node('Multiplier', [c(+m(I.edgeMetres).toFixed(5)), F], null, `Height available from the shore inwards: F * ${I.edgeMetres} m.`);
   const cap = node('CurveMapper', [noise2d(I.capScale, 3, 'Arrakis_Islands_Tops')], { Curve: curve(I.capCurve.map(([i, o]) => [i, m(o)])) },
     'Height cap: low benches where the noise is low, summits where it is high.');
@@ -152,7 +159,7 @@ function makeRock(P) {
     const shift = () => L.spawnShare
       ? node('Min', [islandShift(), dist0([[L.spawnRadius, fill * (1 - L.spawnShare)], [L.spawnRadius + 80, 3]], `Near spawn about ${Math.round(L.spawnShare * 100)}% of cells are filled whatever the island distance, so there are stepping stones.`)])
       : node('Max', [islandShift(), dist0([[L.spawnClear, 3], [L.spawnClear + 1, 0]], `No cells of this layer within ${L.spawnClear} m of spawn.`)]);
-    const latitudeShift = () => (T && L.southShare) ? node('Min', [shift(), byLatitude([[0, 3], [T.southEnd, fill * (1 - L.southShare / L.fill)]], `Going south, cells fill on their own whatever the island distance, up to ${Math.round(L.southShare * 100)}% of cells by ${T.southEnd} m south.`)]) : shift();
+    const latitudeShift = () => (T && L.aloneShare) ? node('Min', [shift(), c(+(fill * (1 - L.aloneShare / L.fill)).toFixed(5))], null, `Free-standing outcrops: about ${(L.aloneShare * 100).toFixed(1)}% of cells fill on their own, anywhere, whatever the island distance.`) : shift();
     const v = () => node('Sum', [{ Type: 'WhiteNoise', Seed: 'Arrakis_Outcrops_Choice_' + name, Skip: false }, latitudeShift()]);
     const cellValue = (density, def, comment) => Object.assign(comment ? { $Comment: comment } : {}, { Type: 'PositionsCellNoise', Skip: false, MaxDistance: L.maxDistance, Positions: positions,
       ReturnType: { Type: 'CellValue', Density: density, DefaultValue: def }, DistanceFunction: { Type: 'Euclidean' } });
@@ -238,7 +245,9 @@ function makeRock(P) {
     // Distance measures from the world origin in 3D. These uses are evaluated per voxel, so the height has to be zeroed first.
     const flatDist = (pts, comment) => node('YOverride', [dist0(pts)], { Value: 0 }, comment);
     // Footprint fields, all "1 at the centre, 0 at the shore".
-    const fields = { large: F, medium: outcropLayersAll[0], small: outcropLayersAll[1], start: startF() };
+    const fields = { large: masses.length ? regularF : F, medium: outcropLayersAll[0], small: outcropLayersAll[1], start: startF() };
+    // Land masses are a class of their own so they can be lowered less than regular islands and stay solid.
+    if (masses.length) fields.mass = node('Max', masses.map(x => x.field), null, 'All land-mass fields.');
     // What the recipes are told in place of DistanceToBiomeEdge: how far inside its island or outcrop a column is, on the scale of a full-size island.
     let insideDefined = false;
     const inside = () => { if (insideDefined) return { Type: 'Imported', Name: 'Arrakis_Inside', Skip: false }; insideDefined = true;
@@ -283,16 +292,15 @@ function makeRock(P) {
     const islandPick = (() => { let defined = false; return () => { if (defined) return { Type: 'Imported', Name: 'Arrakis_Pick', Skip: false }; defined = true;
       const whiteAt = (positions, maxDistance) => ({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: maxDistance, Positions: positions,
         ReturnType: { Type: 'CellValue', Density: { Type: 'WhiteNoise', Seed: 'Arrakis_Variant_Pick', Skip: false }, DefaultValue: 0 }, DistanceFunction: { Type: 'Euclidean' } });
-      const reach = T ? 2 * Math.max(...T.beltSizes.map(s => s[0])) + 400 : 1200;
       const mediumCells = { Type: 'Mesh2D', Skip: false, PointsY: 0, PointGenerator: { Type: 'Mesh', Jitter: O.medium.jitter, ScaleX: O.medium.grid, ScaleY: O.medium.grid, ScaleZ: O.medium.grid, Seed: 'Arrakis_Outcrops_Medium' } };
-      return { $Comment: 'Variant pick, -1..1. One value per large island, shared by its whole land mass and its outcrop chain; a medium island with no large island nearby picks for itself.',
-        Type: 'Exported', ExportAs: 'Arrakis_Pick', SingleInstance: true, Skip: false, Inputs: [cache2d(node('Mix', [
-          whiteAt(mediumCells, O.medium.maxDistance),
-          whiteAt(islandPositions, reach),
-          step01(node('Max', [node('Sum', [copyNode(F), c(0.05)]),
-            { Type: 'PositionsCellNoise', Skip: false, MaxDistance: 1300, Positions: islandPositions, ReturnType: { Type: 'Curve', Curve: curve([[1199, 1], [1200, -1]]) }, DistanceFunction: { Type: 'Euclidean' } }]),
-            '1 on a large island or within 1200 m of its centre.')
-        ]))] }; }; })();
+      // regular islands and their chains: the nearest regular island centre within 1200 m, else the outcrop picks for itself
+      let pick = node('Mix', [whiteAt(mediumCells, O.medium.maxDistance), whiteAt(regularIslandPositions, 1300),
+        step01({ Type: 'PositionsCellNoise', Skip: false, MaxDistance: 1300, Positions: regularIslandPositions, ReturnType: { Type: 'Curve', Curve: curve([[1199, 1], [1200, -1]]) }, DistanceFunction: { Type: 'Euclidean' } }, '1 within 1200 m of a regular island centre.')]);
+      // then each land mass claims its own footprint and a margin round it; later (larger) classes override earlier ones
+      for (const x of masses) pick = node('Mix', [pick, whiteAt(x.positions, 2 * Math.max(...x.M.sizes.map(s => s[0])) + 200),
+        step01(node('Sum', [copyNode(x.field), c(0.25)]), `1 on a ${x.M.name} land mass (sub-grid ${x.tag}) and a margin round it.`)]);
+      return { $Comment: 'Variant pick, -1..1. One value per land mass, shared by everything on and round it.',
+        Type: 'Exported', ExportAs: 'Arrakis_Pick', SingleInstance: true, Skip: false, Inputs: [cache2d(pick)] }; }; })();
     const startPick = pickOf({ Type: 'List', Skip: false, Positions: [{ X: 0, Y: 0, Z: 0 }] }, 400, 'Arrakis_Pick_Start');
     const n = V.mixes.length;
     // Slider evaluates its input at (position - slide): SlideY = -sink reads the recipe `sink` blocks higher up, so the shape moves down.
@@ -312,7 +320,8 @@ function makeRock(P) {
     ]), step01(node('Sum', [cache2d(copyNode(field)), c(0.012)]), '1 inside a ' + name + ' footprint.')], null, `${name}: picked variant lowered ${cls.sink} blocks, inside its footprints only.`);
 
     const others = node('Min', [
-      node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]),
+      node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]
+        .concat(fields.mass ? [body('Land mass', fields.mass, V.mass, islandPick)] : [])),
       flatDist([[S.othersClear, -5], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the landing pad.`)
     ]);
     // Starting island at the origin with a landing pad. Two cones hold the ground near the pad: nothing below the lower one, nothing above
@@ -347,15 +356,21 @@ const PARAMS = {
   // North is -Z. A belt of large east-west islands peaks 10 km north of spawn and is back to normal by 20 km north.
   // Going south, large islands thin out and by 20 km south only free-standing medium islands remain.
   latitude: {
-    southEnd: 20000,
-    // [z, value] points; curves hold their end values beyond the last point
-    regularKeep: [[-20000, 0.7], [-10000, 0.15], [-2500, 0.7], [0, 0.7], [20000, 0]],
-    beltKeep: [[-20000, 0], [-10000, 0.9], [-2500, 0]],
-    beltStrength: [[-20000, 0], [-10000, 1], [-2500, 0]],
-    beltGridX: 4000, beltGridZ: 1800, beltJitter: 0.12,
-    // [half east-west, half north-south] by belt strength, weakest first
-    beltSizes: [[500, 330], [750, 400], [1050, 470], [1350, 520]],
-    beltLobeAmp: 0.45, beltLobeScale: 520, beltBayAmp: 0.14, beltBayScale: 150
+    // [z, value] points; curves hold their end values beyond the last point. North is -Z.
+    // Regular islands (about 600 m): common from spawn to 20 km north, thinning to 10% far north and far south.
+    regularKeep: [[-27000, 0.1], [-21000, 0.6], [-1000, 0.7], [3000, 0.6], [12000, 0.3], [20000, 0.1]],
+    // Land masses, smallest class first (the variant pick lets later classes override earlier ones where they overlap).
+    // sizes: [half east-west, half north-south, turn in degrees]
+    masses: [
+      { name: 'Large', gridX: 2800, gridZ: 1900, jitter: 0.2, offsets: [[0, 0], [1400, 950]],
+        keep: [[-27000, 0.05], [-21000, 0.45], [-5000, 0.5], [-1500, 0.12], [4000, 0.12], [12000, 0.07], [20000, 0.05]],
+        sizes: [[375, 250, 0], [480, 270, 25], [560, 300, -20], [625, 320, 10], [450, 300, -35]],
+        lobeAmp: 0.4, lobeScale: 300, bayAmp: 0.1, bayScale: 90 },
+      { name: 'Huge', gridX: 5500, gridZ: 3500, jitter: 0.18, offsets: [[700, 400], [3450, 2150]],
+        keep: [[-22000, 0], [-17000, 0.35], [-12000, 0.5], [-6000, 0.45], [-3000, 0]],
+        sizes: [[1000, 500, 0], [1100, 560, 12], [1250, 620, -10], [1150, 520, 20]],
+        lobeAmp: 0.35, lobeScale: 600, bayAmp: 0.12, bayScale: 170 }
+    ]
   },
   // Rock variants: vanilla terrain recipes, alone or merged. One is picked per large island and used by its whole outcrop chain.
   variants: {
@@ -363,7 +378,7 @@ const PARAMS = {
     // 1+6 and 3+6 were dropped: most floating rock in the showcase.
     mixes: [[1], [3], [5], [6], [1, 3], [1, 5], [3, 5], [5, 6], [1, 3, 5], [1, 3, 5, 6]],
     edgeReference: 300, patchScale: 240, coastSlope: 1.3, rootDepth: 4, padSlope: 0.6,
-    large: { sink: 20, nominalRadius: 300 }, medium: { sink: 40, nominalRadius: 75 }, small: { sink: 50, nominalRadius: 28 }, start: { sink: 30, nominalRadius: 100 }
+    mass: { sink: 8, nominalRadius: 400 }, large: { sink: 20, nominalRadius: 300 }, medium: { sink: 40, nominalRadius: 75 }, small: { sink: 50, nominalRadius: 28 }, start: { sink: 30, nominalRadius: 100 }
   },
   sandLevel: 80, // must equal Base in WorldStructures/Arrakis.json; write.js checks it
   // Rock more than this many metres below the sand surface height field is removed, so roots go straight down.
@@ -383,13 +398,13 @@ const PARAMS = {
   outcrops: {
     windAngle: 30, rimSteepness: 3, edgeNoise: 0.28,
     // variants: [shareOfCells, semiLengthAlongLean, semiWidth, leanOffsetDeg, crestMetres]; biggest first
-    medium: { islandLike: true, southShare: 0.15, spawnClear: 350, grid: 400, jitter: 0.14, maxDistance: 200, fadeStart: 450, fadeEnd: 1000,
+    medium: { islandLike: true, aloneShare: 0.03, spawnClear: 350, grid: 400, jitter: 0.14, maxDistance: 200, fadeStart: 450, fadeEnd: 1000,
       fill: 0.9, radiusCurve: [[-1, 50], [0, 72], [1, 97]], farShrink: 0.8,
       lobeAmp: 0.45, lobeScale: 75, detailAmp: 0.03, detailScale: 22, capScale: 85,
       heightPerRadius: 0.4, heightVariety: [[-1, 0.4], [0, 0.9], [1, 1.4]], capCurve: [[-1, 0.3], [-0.2, 0.45], [0.2, 0.8], [0.6, 1.1], [1, 1.1]],
       variants: [
       [0.12, 125, 70, -10, 45], [0.12, 110, 55, 20, 30], [0.10, 100, 80, 0, 60], [0.10, 90, 45, -25, 22], [0.08, 75, 50, 10, 14]] },
-    small: { islandLike: true, spawnShare: 0.3, spawnRadius: 280, grid: 150, jitter: 0.14, maxDistance: 77, fadeStart: 400, fadeEnd: 1000,
+    small: { islandLike: true, aloneShare: 0.004, spawnShare: 0.3, spawnRadius: 280, grid: 150, jitter: 0.14, maxDistance: 77, fadeStart: 400, fadeEnd: 1000,
       fill: 0.5, radiusCurve: [[-1, 14], [0, 22], [1, 36]], farShrink: 0.8,
       lobeAmp: 0.45, lobeScale: 28, detailAmp: 0.03, detailScale: 9, capScale: 32,
       heightPerRadius: 0.45, heightVariety: [[-1, 0.3], [0.3, 0.9], [0.85, 1.3], [0.93, 3.5], [1, 4.5]], capCurve: [[-1, 0.3], [-0.2, 0.45], [0.2, 0.8], [0.6, 1.1], [1, 1.1]],
