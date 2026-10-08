@@ -2,7 +2,7 @@ plugins {
     id("java")
 }
 
-group = "com.paulorchard"
+group = "com.paulorchard.islandcraft"
 version = "0.1.0"
 
 val hytaleServerVersion = "0.6.8"
@@ -25,19 +25,19 @@ java {
 }
 
 tasks.jar {
-    archiveBaseName.set("Arrakis")
+    archiveBaseName.set("IslandCraft-DunesOfArrakis")
 }
 
 tasks.register<Copy>("deployMod") {
     group = "hytale"
-    description = "Copies the built jar into the Hytale Mods folder, replacing any earlier Arrakis build."
+    description = "Copies the built jar into the Hytale Mods folder, replacing any earlier build of this mod, including builds under its old name."
 
     from(tasks.jar)
     into(modsDir)
 
     doFirst {
         delete(fileTree(modsDir) {
-            include("Arrakis-*.zip", "Arrakis-*.jar")
+            include("Arrakis-*.zip", "Arrakis-*.jar", "IslandCraft-DunesOfArrakis-*.zip", "IslandCraft-DunesOfArrakis-*.jar")
         })
     }
 }

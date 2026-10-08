@@ -1,4 +1,4 @@
-package com.paulorchard.arrakis;
+package com.paulorchard.islandcraft.dunesofarrakis;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.util.ChunkUtil;
@@ -21,7 +21,7 @@ import java.util.logging.Level;
  * as long as the world stays loaded. If no rock is found the player is put on the
  * surface at the origin, whatever it is.
  */
-public class ArrakisSpawnProvider implements ISpawnProvider {
+public class DunesOfArrakisSpawnProvider implements ISpawnProvider {
 
     /** How far from the origin to look, in blocks. */
     static final int SEARCH_RADIUS = 320;
@@ -101,7 +101,7 @@ public class ArrakisSpawnProvider implements ISpawnProvider {
     }
 
     private static Transform report(int x, int top, int z, String kind) {
-        LOGGER.at(Level.INFO).log("Arrakis spawn set on %s at (%d, %d, %d)", kind, x, top + 1, z);
+        LOGGER.at(Level.INFO).log("Dunes of Arrakis spawn set on %s at (%d, %d, %d)", kind, x, top + 1, z);
         return new Transform(x + 0.5, top + 1, z + 0.5);
     }
 

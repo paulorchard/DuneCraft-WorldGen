@@ -66,12 +66,12 @@ public class RealPreview {
             List<Path> files;
             try (Stream<Path> s = Files.walk(dir)) { files = s.filter(p -> p.toString().endsWith(".json")).toList(); }
             if (files.isEmpty()) continue;
-            var r = store.loadAssetsFromPaths("Arrakis", files);
+            var r = store.loadAssetsFromPaths("IslandCraft:IslandCraft - Dunes of Arrakis", files);
             log.println("loaded " + store.getPath() + ": " + r.getLoadedAssets().keySet() + " failed=" + r.getFailedToLoadPaths());
         }
 
-        WorldStructureAsset wsAsset = AssetRegistry.getAssetStore(WorldStructureAsset.class).getAssetMap().getAsset(env("WS", "Arrakis"));
-        if (wsAsset == null) throw new IllegalStateException("world structure " + env("WS", "Arrakis") + " not loaded");
+        WorldStructureAsset wsAsset = AssetRegistry.getAssetStore(WorldStructureAsset.class).getAssetMap().getAsset(env("WS", "Dunes_of_Arrakis"));
+        if (wsAsset == null) throw new IllegalStateException("world structure " + env("WS", "Dunes_of_Arrakis") + " not loaded");
         // Same steps as BasicWorldStructureAsset.build and BiomeAsset.build, minus materials (block types are not loaded here).
         SeedBox seedBox = new SeedBox((int) seed);
         WorldStructureAsset.Argument arg = new WorldStructureAsset.Argument(null, seedBox, WorkerIndexer.Id.MAIN, new ThreadBridge());
@@ -94,7 +94,7 @@ public class RealPreview {
         Density.Context ctx = new Density.Context();
         ctx.position = new Vector3d();
         ctx.distanceToBiomeEdge = 1000; // previewing one biome on its own: treat every point as deep inside it
-        boolean allRock = System.getenv("BIOME") != null && !env("BIOME", "").equals("AS_Dunes") && !env("BIOME", "").equals("AS_Flat");
+        boolean allRock = System.getenv("BIOME") != null;
         long t0 = System.nanoTime();
         for (int j = 0; j < w; j++) {
             for (int i = 0; i < w; i++) {

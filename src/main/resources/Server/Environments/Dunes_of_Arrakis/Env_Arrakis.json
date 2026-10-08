@@ -1,4 +1,7 @@
 {
+  "Tags": {
+    "Arrakis": []
+  },
   "SpawnDensity": 0.0,
   "WeatherForecasts": {
     "0":  [ { "WeatherId": "Zone2_Sunny", "Weight": 55 }, { "WeatherId": "Zone2_Desert_Haze", "Weight": 25 }, { "WeatherId": "Zone2_Sand_Storm", "Weight": 20 } ],

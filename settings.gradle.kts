@@ -1,1 +1,1 @@
-rootProject.name = "DuneCraft-WorldGen"
+rootProject.name = "IslandCraft-DunesOfArrakis"

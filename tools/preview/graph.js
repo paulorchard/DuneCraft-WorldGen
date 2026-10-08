@@ -259,13 +259,14 @@ function makeRock(P) {
 
     // The recipes: vanilla terrain densities copied unchanged apart from export names and the biome-edge distance, merged by patches.
     const recipe = (mix, index) => {
-      const tag = 'ArrakisV' + (index + 1);
+      const tag = 'Arrakis_V' + (index + 1);
+      const seedTag = 'ArrakisV' + (index + 1); // seed keys keep their first spelling: renaming one would change the terrain
       const copies = mix.map((n, k) => {
         const terrain = clean(JSON.parse(fs.readFileSync(path.join(vanilla, 'Biomes', V.sources[n] + '.json'), 'utf8')).Terrain.Density);
-        const prefix = tag + String.fromCharCode(97 + k) + '_', exported = new Set();
+        const prefix = tag + String.fromCharCode(97 + k) + '_', exported = new Set(); let unnamed = 0;
         walk(terrain, x => { if (typeof x.ExportAs === 'string' && x.ExportAs) exported.add(x.ExportAs); });
         walk(terrain, x => {
-          if (typeof x.ExportAs === 'string' && x.ExportAs) x.ExportAs = prefix + x.ExportAs;
+          if (typeof x.ExportAs === 'string') x.ExportAs = prefix + (x.ExportAs || 'Unnamed' + (++unnamed)); // vanilla leaves some export names empty
           if (x.Type === 'Imported' && exported.has(x.Name)) x.Name = prefix + x.Name;
           if (x.Type === 'DistanceToBiomeEdge') { for (const key of Object.keys(x)) delete x[key]; Object.assign(x, node('Clamp', [inside()], { WallA: 0, WallB: 2000 })); }
         });
@@ -274,7 +275,7 @@ function makeRock(P) {
       let merged = copies[0];
       for (let k = 1; k < copies.length; k++) {
         const share = 1 / (k + 1);
-        merged = node('Mix', [merged, copies[k], node('CurveMapper', [noise2d(V.patchScale, 1, tag + '_Patch' + k)], { Curve: curve([[-1, 0], [1 - 2 * share - 0.3, 0], [1 - 2 * share + 0.3, 1], [1, 1]]) })], null, 'Merge by patches.');
+        merged = node('Mix', [merged, copies[k], node('CurveMapper', [noise2d(V.patchScale, 1, seedTag + '_Patch' + k)], { Curve: curve([[-1, 0], [1 - 2 * share - 0.3, 0], [1 - 2 * share + 0.3, 1], [1, 1]]) })], null, 'Merge by patches.');
       }
       return { $Comment: `Variant ${index + 1}: vanilla recipe${mix.length > 1 ? 's' : ''} ${mix.map(n => '#' + n + ' ' + path.basename(V.sources[n])).join(' + ')}.`,
         Type: 'Exported', ExportAs: tag, SingleInstance: false, Skip: false, Inputs: [merged] };
@@ -282,7 +283,7 @@ function makeRock(P) {
     const definitions = V.mixes.map(recipe);
     const used = new Set();
     // Exported once (not single-instance); every later use imports its own copy with its own caches.
-    const variant = i => { if (used.has(i)) return { Type: 'Imported', Name: 'ArrakisV' + (i + 1), Skip: false }; used.add(i); return definitions[i]; };
+    const variant = i => { if (used.has(i)) return { Type: 'Imported', Name: 'Arrakis_V' + (i + 1), Skip: false }; used.add(i); return definitions[i]; };
 
     // Which variant: one white-noise value per large island, read by its whole chain. Evaluated once per column.
     const pickOf = (positions, maxDistance, name) => { let defined = false;
@@ -387,7 +388,7 @@ const PARAMS = {
     edgeReference: 300, patchScale: 240, coastSlope: 1.3, rootDepth: 4, padSlope: 0.6,
     mass: { sink: 8, nominalRadius: 400 }, large: { sink: 20, nominalRadius: 300 }, medium: { sink: 40, nominalRadius: 75 }, small: { sink: 50, nominalRadius: 28 }, start: { sink: 30, nominalRadius: 100 }
   },
-  sandLevel: 80, // must equal Base in WorldStructures/Arrakis.json; write.js checks it
+  sandLevel: 80, // must equal Base in WorldStructures/Dunes_of_Arrakis.json; write.js checks it
   // Rock more than this many metres below the sand surface height field is removed, so roots go straight down.
   rootCut: 4,
   guaranteedIsland: { x: 640, z: -480, clear: 1200 },

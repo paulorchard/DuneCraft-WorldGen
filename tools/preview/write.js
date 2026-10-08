@@ -17,7 +17,7 @@ if (k < 0) throw new Error('dune noise term not found');
 dunes.Inputs[k] = built.duneNoise();
 fs.writeFileSync(file, JSON.stringify(biome, null, 2) + '\n');
 // Spawn: standing on the landing pad.
-const wsFile = path.join(path.dirname(file), '..', '..', 'WorldStructures', 'Arrakis.json');
+const wsFile = path.join(path.dirname(file), '..', '..', 'WorldStructures', 'Dunes_of_Arrakis.json');
 const ws = JSON.parse(fs.readFileSync(wsFile, 'utf8'));
 const base = ws.Framework.find(f => f.Type === 'DecimalConstants').Entries.find(e => e.Name === 'Base').Value;
 if (PARAMS.sandLevel !== undefined && base !== PARAMS.sandLevel) throw new Error('PARAMS.sandLevel (' + PARAMS.sandLevel + ') must equal Base (' + base + ')');

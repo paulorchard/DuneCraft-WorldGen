@@ -1,4 +1,4 @@
-package com.paulorchard.arrakis;
+package com.paulorchard.islandcraft.dunesofarrakis;
 
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.server.core.universe.world.spawn.ISpawnProvider;
@@ -14,11 +14,11 @@ import java.util.function.LongPredicate;
  * The built-in generator with one change: the default spawn provider looks for
  * exposed rock near the origin instead of using the world structure's fixed point.
  */
-public class ArrakisWorldGen implements IWorldGen {
+public class DunesOfArrakisWorldGen implements IWorldGen {
 
     private final IWorldGen delegate;
 
-    public ArrakisWorldGen(IWorldGen delegate) {
+    public DunesOfArrakisWorldGen(IWorldGen delegate) {
         this.delegate = delegate;
     }
 
@@ -40,7 +40,7 @@ public class ArrakisWorldGen implements IWorldGen {
 
     @Override
     public ISpawnProvider getDefaultSpawnProvider(int seed) {
-        return new ArrakisSpawnProvider();
+        return new DunesOfArrakisSpawnProvider();
     }
 
     @Override

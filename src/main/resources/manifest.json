@@ -1,15 +1,15 @@
 {
-  "Group": "Arrakis",
-  "Name": "Arrakis",
+  "Group": "IslandCraft",
+  "Name": "IslandCraft - Dunes of Arrakis",
   "Version": "0.1.0",
-  "Description": "A Dune-inspired world: a planet-wide ocean of sand with rock islands and continents rising from it.",
+  "Description": "Generates the terrain of Arrakis' northern hemisphere: a deep ocean of sand, rock islands and land masses.",
   "Authors": [
     {
       "Name": "paulo"
     }
   ],
   "ServerVersion": "*",
-  "Main": "com.paulorchard.arrakis.ArrakisPlugin",
+  "Main": "com.paulorchard.islandcraft.dunesofarrakis.DunesOfArrakisPlugin",
   "Dependencies": {
     "Hytale:HytaleGenerator": "*"
   },
