@@ -70,7 +70,7 @@ function makeRock(P) {
   // Dune fade at spawn. The clamped dune noise n (-1 = no dune) is scaled towards -1: n' = (n + 1) * t - 1,
   // with t = 0 near the origin and exactly 1 from duneFadeEnd outwards, so dunes beyond that are unchanged.
   // Scaling shrinks each dune in place; clipping against a cone (first attempt) left a visible circular scarp.
-  const duneNoise = () => !S.enabled ? node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }) : node('Sum', [c(-1), node('Multiplier', [
+  const duneNoise = () => !(S.enabled || S.duneClear) ? node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }) : node('Sum', [c(-1), node('Multiplier', [
     node('Sum', [node('Clamp', [noise2d(400, 4, 'A')], { WallA: -1.0, WallB: 0.8 }), c(1)]),
     node('CurveMapper', [node('Sum', [
       dist0([[0, 0], [2000, 2000]], 'Distance from the origin in metres.'),
@@ -323,7 +323,10 @@ function makeRock(P) {
     const bodies = () => node('Max', [body('Large island', fields.large, V.large, islandPick), body('Medium outcrop', fields.medium, V.medium, islandPick), body('Small outcrop', fields.small, V.small, islandPick)]
         .concat(fields.mass ? [body('Land mass', fields.mass, V.mass, islandPick)] : []));
     if (!S.enabled) return { A: null, B: null, duneHeight, duneNoise, UNIT, rock: { $Comment: 'Rock: > 0 is rock. Vanilla terrain recipes inside our island and outcrop footprints.', Type: 'Exported', ExportAs: 'Arrakis_Rock', SingleInstance: true, Skip: false,
-      Inputs: [node('Sum', [S.island ? node('Max', [bodies(), body('Starting island', fields.start, V.start, startPick)], null, 'Everything, plus a starting island at the origin with its own variant pick. No landing pad: the game snaps spawn to the surface.') : bodies(),
+      Inputs: [node('Sum', [S.island ? node('Max', [bodies(), body('Starting island', fields.start, V[S.cls || 'start'], startPick)].concat(!S.floor ? [] : [
+          node('Min', [node('Sum', [node('Multiplier', [c(1.2), startNatural]), height()]),
+            node('CurveMapper', [node('YOverride', [startF()], { Value: 0 })], { Curve: curve([[-0.0001, -5], [0.0001, 5]]) }, 'Only inside the starting footprint, at any depth: the root goes straight down.')],
+            null, 'Starting island floor: a low, walkable sandstone base filling the starting footprint, so there is always rock at spawn even when the variant drawn sits below the sand there.')]), null, 'Everything, plus a starting island at the origin with its own variant pick. No landing pad: the game snaps spawn to the surface.') : bodies(),
         node('Multiplier', [c(0), insideDefinition], null, 'Holds the definition of Arrakis_Inside; adds exactly 0.')])] } };
     const others = node('Min', [bodies(),
       flatDist([[S.othersClear, -5], [S.othersClear + 10, 5]], `Islands and outcrops stay out of the first ${S.othersClear} m around the landing pad.`)
@@ -390,7 +393,9 @@ const PARAMS = {
   guaranteedIsland: { x: 640, z: -480, clear: 1200 },
   // Spawn terrain (starting island, landing pad, dune clearing) is switched off: players spawn on whatever is at the origin.
   // island: a starting island at the origin (kept). enabled: the landing pad, the clearing round it and the dune clearing (off).
-  start: { enabled: false, island: true, radius: 100, lobeAmp: 0.3, lobeScale: 75, edgeMetres: 30, capCurve: [[-1, 6], [0, 10], [1, 15]],
+  // cls: the size class the island at the origin is built as. floor: a guaranteed low rock base (off). duneClear: dunes fade out round the origin (off).
+  // The plugin's spawn provider looks for exposed rock near the origin, so nothing here has to guarantee it.
+  start: { enabled: false, island: true, cls: 'medium', floor: false, duneClear: false, radius: 75, lobeAmp: 0.3, lobeScale: 75, edgeMetres: 30, capCurve: [[-1, 6], [0, 10], [1, 15]],
     lookoutScale: 110, lookoutFrom: 0.3, lookoutExtra: 20,
     padRadius: 16, padHeight: 10, padBlendEnd: 45, othersClear: 30, duneFadeStart: 120, duneFadeEnd: 320, duneFadeWobble: 45 },
   island: {

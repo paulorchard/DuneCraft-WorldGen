@@ -60,6 +60,7 @@ public class ArrakisWorldGenProvider implements IWorldGenProvider {
         delegate.setWorldStructureName(structure);
 
         LOGGER.at(Level.INFO).log("Creating Arrakis world generator with world structure '%s'", structure);
-        return delegate.getGenerator();
+        // Wrapped so the spawn point is found on exposed rock near the origin.
+        return new ArrakisWorldGen(delegate.getGenerator());
     }
 }

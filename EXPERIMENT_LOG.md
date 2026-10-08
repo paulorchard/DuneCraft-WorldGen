@@ -846,6 +846,85 @@ Preview, 500 m round spawn: seed 1791436655886 has 4.1 ha of rock with its top u
 
 Not checked: whether the surface block at the origin can be a spot the player cannot leave without a fall (the top of a spire, or a pit).
 
+## Arrakis_Sand: sand that cannot be dug
+
+Goal: the desert must never be dug away. A custom block that behaves like bedrock and looks and sounds like white sand, generated wherever the Arrakis world generated `Soil_Sand_White`. Assets only.
+
+Status: deployed. The generator builds with it in the real-generator preview (0 errors), but the preview does not load item or block assets, so the block itself is unchecked until a world is loaded. None of the in-game checks have been run.
+
+### What makes a block unbreakable in 0.6.8
+
+Read from `HytaleServer.jar`, `BlockHarvestUtils`:
+
+- Every damage path ends in `damageSingleBlock`, which returns false straight away when `BlockType.getGathering()` is null. No damage is recorded and no break follows. There is no unbreakable flag and no hardness value on the block type; the missing `Gathering` section is the whole mechanism.
+- Explosions (`ExplosionUtils`) go through the same `performBlockDamage`, so they hit the same check.
+- Creative: `BreakBlockInteraction` tests `GameMode.Creative` and calls `performBlockBreak` directly, skipping the gathering check. That is why bedrock breaks in Creative.
+- Physics: `BlockPhysicsUtil` removes a block when its `Support` requirement is no longer met. No `Support` section, nothing to fail.
+- Paths that skip the check for any block, bedrock included: `DestroyBlockInteraction`, `CarryBlockInteraction`, `BlockPlaceUtils`, and anything that sets blocks directly (commands, builder tools). Not traced further.
+
+### The block
+
+`Server/Item/Items/Soil/Sand/Arrakis_Sand.json`: a copy of vanilla `Soil_Sand_White.json` with three things removed, `BlockType.Gathering`, `BlockType.Support` and `ResourceTypes`, and the translation key changed to `server.items.Arrakis_Sand.name`. Everything else is as white sand: textures and transition texture referenced from vanilla, icon `Icons/ItemsGenerated/Soil_Sand_White.png`, `Group: Sand`, `TransitionToGroups`, `BlockSoundSetId: Sand`, `BlockParticleSetId: Sand`, `ParticleColor`, `PhysicalMaterialId: Dirt`, `TextureComputedColor`, `ItemSoundSetId: ISS_Blocks_Gravel`, category `Blocks.Soils` / `GrassAndDirt`, tags Soil and Sand.
+
+### Translation
+
+`I18nModule.loadMessagesFromPack` runs once per asset pack and merges `Server/Languages/<locale>/*.lang`; the file name is the key prefix. So the mod ships its own `Server/Languages/en-US/server.lang` with one line, `items.Arrakis_Sand.name = Arrakis Sand`, and the vanilla file is untouched. Another installed mod (BetterMap) does the same. English only.
+
+### Files changed
+
+- added `src/main/resources/Server/Item/Items/Soil/Sand/Arrakis_Sand.json`
+- added `src/main/resources/Server/Languages/en-US/server.lang`
+- `src/main/resources/Server/HytaleGenerator/Biomes/Arrakis/Arrakis_Terrain.json`: the one `Soil_Sand_White` (the fallback material of the terrain material provider) is now `Arrakis_Sand`. It is the only biome the Arrakis world structure uses. The showcase biomes keep white sand.
+
+### Expected, not tested
+
+- Survival: hits do nothing on the server. What the client shows while trying (crack overlay, particles) is unknown.
+- A world created before this change keeps white sand in chunks already generated; chunks generated afterwards get `Arrakis_Sand`. The two look the same, so there should be no visible seam, but old chunks stay diggable.
+- Shovelling for sand without removing the block: nothing asset-only found. Every gathering route (`Breaking`, `Soft`, `Harvest`) ends by removing the block.
+
+## Starting island missing (world "Arrakis v23")
+
+World "Arrakis v23" (seed 1791462514960): no rock island at spawn; player joined at (11.2, 105.4, -9.2) on a dune. Log: no `Took too long`, and no warnings or errors naming `Arrakis_Sand`, an unknown block or a missing asset.
+
+Reproduced in the real-generator preview: 0 rock columns within 250 m of spawn on that seed.
+
+Two causes, both from removing the landing pad:
+
+- The starting island was only a vanilla recipe lowered 30 blocks inside a 100 m footprint. The root rule keeps it only where the recipe is solid 4 blocks below sand level, and on some variant draws the recipe's ground is below the sand across the whole footprint. Lowering it less did not help on this seed (rock in a 300 m view at 2 m per pixel, of 22500 pixels: 0 at 30 blocks, 203 at 15, 344 at 8).
+- The dune clearing round spawn was switched off with the pad, so dunes up to about 25 m high buried whatever low rock there was.
+
+Fix:
+
+- Starting island floor: the old natural starting outcrop height (low walkable top 6-15 blocks above sand level, lookout rise up to 20, shaped by the lobed starting footprint, no pad and no cones) is added as a rock body, limited to the starting footprint at every depth so its root goes straight down. Rock = `Max(everything else, variant starting island, floor)`.
+- The dune clearing round spawn is back on (dunes fade out between 320 m and 120 m from the origin).
+
+Rock pixels in the same 300 m view on eight seeds, before then after: 0 / 3267, 261 / 4235, 5144 / 9192, 6285 / 7325, 2441 / 6086, 2110 / 5367, 4513 / 5739, 2474 / 5650.
+
+On the v23 seed: 1.3 ha of rock above the sand, top block Y 81-89, sand reachable in all eight directions without a step over one block; 0 sand columns painted as rock. Underground the footprint is 3.4 ha (2.6 times what shows), a single isolated column.
+
+Status: deployed, not yet seen in game.
+
+## Spawn found by the plugin, on a plain medium island at the origin
+
+Direction: stop forcing rock under spawn. Generate an ordinary medium island at (0, 0) and have the game find exposed rock nearby to spawn on.
+
+Status: deployed and compiles; the generator builds in the real-generator preview. The spawn search itself has not been run in game.
+
+### Terrain
+
+`start: { island: true, cls: 'medium', floor: false, duneClear: false, radius: 75 }`. The island at the origin is now built as the medium class (recipe lowered 40 blocks, 75 m footprint, its own variant pick). The guaranteed rock base and the dune clearing from the previous section are off again. Medium grid cells still stay 350 m away from the origin so they do not overlap it.
+
+Exposed rock in a 320 m view round the origin, at 2 m per pixel, of 25600 pixels, on ten seeds: 0, 109, 5167, 3687, 728, 433, 2071, 1163, 1643, 266. So about one seed in ten has no rock showing within 160 m of the origin, and several have very little.
+
+### Plugin
+
+- `WorldConfig` holds a transient default spawn provider taken from `IWorldGen.getDefaultSpawnProvider(seed)`; it is not saved in the world's config.
+- `ArrakisWorldGen` wraps the built-in generator and returns `ArrakisSpawnProvider` from that method. Everything else is passed straight through.
+- `ArrakisSpawnProvider`, on the first spawn request of a world load: walks columns outwards from the origin in square rings, up to 320 blocks. A column counts when its top block's id starts with `Rock_`. It takes the first such column whose four neighbours are also rock within one block of its height; if none turns up within 24 blocks beyond the first rock seen, it takes that first rock. Spawn is one block above the top block. With no rock at all it uses the surface at the origin and logs a warning. The result is logged ("Arrakis spawn set on ...") and kept until the world unloads.
+- Side effect of the wrapper: the built-in generator plugin's `RemoveWorldEvent` handler checks for its own handle type and will not recognise the wrapped generator. `shutdown()` is still forwarded.
+
+Not checked: how long the search takes when it has to go far (each new chunk it touches is generated on the spot; 320 blocks out is up to about 440 chunks), and whether a long search on first join causes any trouble.
+
 ## Dead ends
 
 - Offline preview harness using server classes: `AssetManager` static init registers asset stores on `HytaleServer.get().getEventBus()`, which is null outside a running server. SOLVED in round 5 by supplying a bare server object with an event bus (see `RealPreview.java`).

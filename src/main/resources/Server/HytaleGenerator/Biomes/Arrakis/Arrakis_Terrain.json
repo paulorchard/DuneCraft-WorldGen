@@ -32272,7 +32272,7 @@
                       ]
                     },
                     {
-                      "$Comment": "Starting island: picked variant lowered 30 blocks, inside its footprints only.",
+                      "$Comment": "Starting island: picked variant lowered 40 blocks, inside its footprints only.",
                       "Type": "Mix",
                       "Skip": false,
                       "Inputs": [
@@ -32286,7 +32286,7 @@
                           "Skip": false,
                           "Inputs": [
                             {
-                              "$Comment": "The picked variant, lowered 30 blocks.",
+                              "$Comment": "The picked variant, lowered 40 blocks.",
                               "Type": "Max",
                               "Skip": false,
                               "Inputs": [
@@ -32302,7 +32302,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32425,7 +32425,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32502,7 +32502,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32579,7 +32579,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32656,7 +32656,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32733,7 +32733,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32810,7 +32810,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32887,7 +32887,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -32964,7 +32964,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -33041,7 +33041,7 @@
                                     {
                                       "Type": "Slider",
                                       "SlideX": 0,
-                                      "SlideY": -30,
+                                      "SlideY": -40,
                                       "SlideZ": 0,
                                       "Skip": false,
                                       "Inputs": [
@@ -33119,7 +33119,7 @@
                                   "Inputs": [
                                     {
                                       "Type": "Constant",
-                                      "Value": 1.3,
+                                      "Value": 0.975,
                                       "Skip": false
                                     },
                                     {
@@ -33138,7 +33138,7 @@
                                               "Skip": false,
                                               "Inputs": [
                                                 {
-                                                  "$Comment": "Radial falloff from the origin: 0 at 100 m.",
+                                                  "$Comment": "Radial falloff from the origin: 0 at 75 m.",
                                                   "Type": "Distance",
                                                   "Skip": false,
                                                   "Curve": {
@@ -33149,7 +33149,7 @@
                                                         "Out": 1
                                                       },
                                                       {
-                                                        "In": 200,
+                                                        "In": 150,
                                                         "Out": -1
                                                       }
                                                     ]
@@ -33258,7 +33258,7 @@
                                       "Skip": false,
                                       "Inputs": [
                                         {
-                                          "$Comment": "The picked variant, lowered 30 blocks.",
+                                          "$Comment": "The picked variant, lowered 40 blocks.",
                                           "Type": "Max",
                                           "Skip": false,
                                           "Inputs": [
@@ -33274,7 +33274,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33351,7 +33351,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33428,7 +33428,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33505,7 +33505,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33582,7 +33582,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33659,7 +33659,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33736,7 +33736,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33813,7 +33813,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33890,7 +33890,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -33967,7 +33967,7 @@
                                                 {
                                                   "Type": "Slider",
                                                   "SlideX": 0,
-                                                  "SlideY": -30,
+                                                  "SlideY": -40,
                                                   "SlideZ": 0,
                                                   "Skip": false,
                                                   "Inputs": [
@@ -34078,7 +34078,7 @@
                                               "Skip": false,
                                               "Inputs": [
                                                 {
-                                                  "$Comment": "Radial falloff from the origin: 0 at 100 m.",
+                                                  "$Comment": "Radial falloff from the origin: 0 at 75 m.",
                                                   "Type": "Distance",
                                                   "Skip": false,
                                                   "Curve": {
@@ -34089,7 +34089,7 @@
                                                         "Out": 1
                                                       },
                                                       {
-                                                        "In": 200,
+                                                        "In": 150,
                                                         "Out": -1
                                                       }
                                                     ]
@@ -36991,7 +36991,7 @@
                                           "Skip": false,
                                           "Inputs": [
                                             {
-                                              "$Comment": "Radial falloff from the origin: 0 at 100 m.",
+                                              "$Comment": "Radial falloff from the origin: 0 at 75 m.",
                                               "Type": "Distance",
                                               "Skip": false,
                                               "Curve": {
@@ -37002,7 +37002,7 @@
                                                     "Out": 1
                                                   },
                                                   {
-                                                    "In": 200,
+                                                    "In": 150,
                                                     "Out": -1
                                                   }
                                                 ]
@@ -38550,7 +38550,7 @@
         {
           "Type": "Constant",
           "Material": {
-            "Solid": "Soil_Sand_White"
+            "Solid": "Arrakis_Sand"
           }
         }
       ]
